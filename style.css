@@ -1,0 +1,536 @@
+/* === THEME AND VARIABLES === */
+:root {
+    --primary-orange: #F37050;
+    --charcoal-gray: #6D6E71;
+    --dark-bg: #2d2d2f;
+    --light-bg: #f4f5f7;
+    --white: #ffffff;
+    --text-primary: #333;
+    --text-secondary: #777;
+    --danger: #dc3545;
+    --border-color: #dee2e6;
+    --heading-font: 'Montserrat', sans-serif;
+    --body-font: 'Open Sans', sans-serif;
+    --border-radius: 8px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* === BASE & RESET === */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--body-font);
+    margin: 0;
+    background-color: var(--light-bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--heading-font);
+    font-weight: 600;
+    margin-top: 0;
+}
+
+.screen {
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* === LOGIN SCREEN === */
+#login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--light-bg);
+}
+
+.login-container {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    max-width: 900px;
+    width: 100%;
+    margin: 1rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.login-brand-panel {
+    background-color: var(--dark-bg);
+    color: var(--white);
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.login-logo {
+    max-width: 150px;
+    margin-bottom: 1rem;
+}
+
+.login-brand-panel h1 {
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.login-form-panel {
+    padding: 3rem 2.5rem;
+}
+
+.login-form-panel h2 {
+    margin-bottom: 0.5rem;
+}
+
+.login-form-panel p {
+    margin-bottom: 2rem;
+    color: var(--text-secondary);
+}
+
+/* === FORMS & INPUTS === */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: var(--body-font);
+    line-height: 1.5;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 3px rgba(243, 112, 80, 0.2);
+}
+
+/* === QUILL EDITOR STYLES === */
+.ql-toolbar.ql-snow {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-color: var(--border-color);
+    background: #fafafa;
+}
+
+.ql-container.ql-snow {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-color: var(--border-color);
+    font-size: 1rem;
+    font-family: var(--body-font);
+    min-height: 300px;
+}
+
+.form-group:focus-within .ql-toolbar.ql-snow,
+.form-group:focus-within .ql-container.ql-snow {
+    border-color: var(--primary-orange);
+}
+
+/* === BUTTONS & MISC === */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--heading-font);
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    background-color: var(--primary-orange);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: #e05a3a;
+    transform: translateY(-2px);
+}
+
+.error-message {
+    color: var(--danger);
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* === DASHBOARD LAYOUT === */
+.dashboard-header {
+    background-color: var(--white);
+    color: var(--text-primary);
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-logo img {
+    height: 40px;
+}
+
+.header-logo span {
+    font-family: var(--heading-font);
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--charcoal-gray);
+}
+
+.btn-secondary:hover {
+    background: var(--light-bg);
+}
+
+.dashboard-main {
+    display: flex;
+}
+
+.sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background-color: var(--dark-bg);
+    padding: 1.5rem 1rem;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    transition: width 0.3s ease;
+}
+
+.sidebar button {
+    display: flex;
+    width: 100%;
+    background: transparent;
+    color: #ccc;
+    text-align: left;
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--white);
+}
+
+.sidebar button.active {
+    background-color: var(--primary-orange);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.sidebar button .fa-fw {
+    margin-right: 0.75rem;
+}
+
+#content-area {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    height: calc(100vh - 70px);
+}
+
+#content-area>h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+#content-area hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 1.5rem 0;
+}
+
+/* === CONTENT CARDS & FORMS === */
+.item-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.item-card img {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.item-card .content {
+    flex-grow: 1;
+}
+
+.item-card h3 {
+    margin: 0 0 0.25rem;
+}
+
+.item-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-card .actions {
+    margin-left: auto;
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
+.item-card .actions .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    background-color: var(--charcoal-gray);
+    color: white;
+}
+
+.item-card .actions .delete-btn {
+    background-color: var(--danger);
+}
+
+form.item-form {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin-top: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.testimonial-card .content,
+.contact-card .content {
+    width: 100%;
+}
+
+.contact-card .message-body {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    margin-top: 1rem;
+}
+
+.contact-card.unread {
+    border-left: 5px solid var(--primary-orange);
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.schedule-table th,
+.schedule-table td {
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.schedule-table th {
+    background-color: var(--light-bg);
+    font-family: var(--heading-font);
+}
+
+.class-item {
+    background: #fff8f5;
+    border-left: 3px solid var(--primary-orange);
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.class-item .actions {
+    margin-top: 0.75rem;
+}
+
+.class-item .actions .btn {
+    background-color: var(--charcoal-gray);
+    color: var(--white);
+}
+
+/*
+===============================
+=== RESPONSIVE STYLES (NEW) ===
+===============================
+*/
+
+/* For Tablets and smaller */
+@media (max-width: 992px) {
+    .login-container {
+        grid-template-columns: 1fr;
+        /* Stack login panels */
+    }
+
+    .login-brand-panel {
+        display: none;
+        /* Hide brand panel on smaller screens for simplicity */
+    }
+
+    .login-form-panel {
+        padding: 2rem;
+    }
+
+    .sidebar {
+        width: 80px;
+        /* Shrink sidebar */
+        padding: 1.5rem 0.5rem;
+    }
+
+    .sidebar button {
+        justify-content: center;
+    }
+
+    .sidebar .button-text {
+        /* Add a class to the text part if you want to hide it */
+        display: none;
+    }
+
+    .sidebar button .fa-fw {
+        margin-right: 0;
+        font-size: 1.2rem;
+    }
+
+    .dashboard-header {
+        padding: 0 1rem;
+    }
+}
+
+/* For Mobile phones */
+@media (max-width: 576px) {
+    .dashboard-main {
+        flex-direction: column;
+        /* Stack sidebar on top of content */
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        display: flex;
+        overflow-x: auto;
+        /* Allow horizontal scrolling for buttons */
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar button {
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem;
+        font-size: 0.7rem;
+        white-space: normal;
+        min-width: 80px;
+    }
+
+    .sidebar button .fa-fw {
+        margin-right: 0;
+        margin-bottom: 0.25rem;
+        font-size: 1.5rem;
+    }
+
+    #content-area {
+        padding: 1rem;
+        height: auto;
+        /* Let content determine height */
+    }
+
+    #content-area>h1 {
+        font-size: 1.5rem;
+    }
+
+    .item-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .item-card .actions {
+        margin-left: 0;
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .item-card .actions .btn {
+        flex-grow: 1;
+        /* Make buttons take up equal space */
+    }
+
+    .schedule-container {
+        overflow-x: auto;
+        /* Enable horizontal scrolling for the table */
+    }
+
+    .schedule-table {
+        min-width: 700px;
+    }
+
+    .login-container {
+        margin: 0;
+        border-radius: 0;
+        height: 100vh;
+    }
+
+    .login-form-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+}
