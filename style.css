@@ -23,6 +23,7 @@
 body {
     font-family: var(--body-font);
     margin: 0;
+    zoom: 75%;
     background-color: var(--light-bg);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
