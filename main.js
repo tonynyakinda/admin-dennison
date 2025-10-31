@@ -1,4 +1,4 @@
-// dennison-admin/main.js - UNFOLDED AND COMPLETE
+// dennison-admin/main.js
 
 import { supabase } from './supabaseClient.js';
 import Quill from 'https://cdn.skypack.dev/quill@1.3.6';
@@ -135,14 +135,16 @@ async function showEditMerchandiseForm(id) {
     document.getElementById('merch-edit-form').addEventListener('submit', async (e) => { e.preventDefault(); const form = e.target; let imageUrl = data.image_url; const imageFile = form.querySelector('#image').files[0]; if (imageFile) { const filePath = `merch-${Date.now()}-${imageFile.name}`; const { error: uploadError } = await supabase.storage.from('merchandise-images').upload(filePath, imageFile); if (uploadError) { alert('Failed to upload new image.'); return; } imageUrl = supabase.storage.from('merchandise-images').getPublicUrl(filePath).data.publicUrl; } const { error: updateError } = await supabase.from('merchandise').update({ name: form.querySelector('#name').value, price: form.querySelector('#price').value, description: form.querySelector('#description').value, image_url: imageUrl, }).eq('id', id); if (updateError) { alert('Failed to update product.'); } else { alert('Product updated successfully!'); loadMerchandise(); } });
 }
 
-// --- POSTS CRUD FUNCTIONS (CLEANED UP) ---
+// --- POSTS CRUD FUNCTIONS (CORRECTED) ---
 async function loadPosts() {
     contentArea.innerHTML = '<h1>Loading posts...</h1>';
     const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
     if (error) { console.error('Error fetching posts:', error); contentArea.innerHTML = 'Error loading data.'; return; }
     contentArea.innerHTML = `<h1>Manage Posts</h1><button id="add-post-btn" class="btn btn-primary">Add New Post</button><hr>`;
     if (data.length === 0) { contentArea.innerHTML += '<p>No posts found. Click "Add New" to start.</p>'; return; }
-    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card post-card" data-id="${item.id}"><img src="${item.image_url}" alt="${item.title}"><div class="content"><h3>${item.title}</h3><p><strong>Type:</strong> ${item.post_type}</p></div><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
+    data.forEach(item => {
+        contentArea.insertAdjacentHTML('beforeend', `<div class="item-card post-card" data-id="${item.id}"><img src="${item.image_url}" alt="${item.title}"><div class="content"><h3>${item.title}</h3><p><strong>Type:</strong> ${item.post_type}</p></div><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`);
+    });
 }
 function showAddPostForm() {
     contentArea.innerHTML = `<h1>Add New Post</h1><form class="item-form" id="post-form"></form>`;
@@ -150,6 +152,7 @@ function showAddPostForm() {
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" required></div>
         <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog">Blog</option><option value="vlog">Vlog</option></select></div>
         <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
+        <div class="form-group"><label for="audio_url">Audio URL (for vlogs, e.g., Spotify)</label><input type="url" id="audio_url" placeholder="https://open.spotify.com/episode/..."></div>
         <div class="form-group"><label for="video_url">Video URL (for vlogs, e.g., YouTube)</label><input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..."></div>
         <div class="form-group"><label for="image">Cover Image</label><input type="file" id="image" accept="image/*" required></div>
         <button type="submit" class="btn btn-primary">Save Post</button>`;
@@ -165,7 +168,7 @@ function showAddPostForm() {
         if (uploadError) { alert('Failed to upload image.'); console.error(uploadError); return; }
         const imageUrl = supabase.storage.from('post-images').getPublicUrl(filePath).data.publicUrl;
         const content = quill.root.innerHTML;
-        const { error: insertError } = await supabase.from('posts').insert([{ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }]);
+        const { error: insertError } = await supabase.from('posts').insert([{ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, audio_url: form.querySelector('#audio_url').value, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }]);
         if (insertError) { alert('Failed to save post data.'); } else { alert('Post added successfully!'); loadPosts(); }
     });
 }
@@ -177,6 +180,7 @@ async function showEditPostForm(id) {
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" value="${data.title}" required></div>
         <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog" ${data.post_type === 'blog' ? 'selected' : ''}>Blog</option><option value="vlog" ${data.post_type === 'vlog' ? 'selected' : ''}>Vlog</option></select></div>
         <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
+        <div class="form-group"><label for="audio_url">Audio URL (for vlogs)</label><input type="url" id="audio_url" value="${data.audio_url || ''}"></div>
         <div class="form-group"><label for="video_url">Video URL (for vlogs)</label><input type="url" id="video_url" value="${data.video_url || ''}"></div>
         <div class="form-group"><label>Current Image</label><br><img src="${data.image_url}" alt="${data.title}" style="width:100px; height:100px; object-fit:cover;"></div>
         <div class="form-group"><label for="image">Upload New Image (optional)</label><input type="file" id="image" accept="image/*"></div>
@@ -197,15 +201,45 @@ async function showEditPostForm(id) {
             imageUrl = supabase.storage.from('post-images').getPublicUrl(filePath).data.publicUrl;
         }
         const content = quill.root.innerHTML;
-        const { error: updateError } = await supabase.from('posts').update({ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }).eq('id', id);
+        const { error: updateError } = await supabase.from('posts').update({ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, audio_url: form.querySelector('#audio_url').value, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }).eq('id', id);
         if (updateError) { alert('Failed to update post.'); } else { alert('Post updated successfully!'); loadPosts(); }
     });
 }
 
 // --- SCHEDULE CRUD FUNCTIONS ---
-async function loadSchedule() { contentArea.innerHTML = '<h1>Loading schedule...</h1>'; const { data, error } = await supabase.from('schedule').select('*').order('start_time'); if (error) { console.error('Error fetching schedule:', error); contentArea.innerHTML = 'Error loading data.'; return; } const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']; let scheduleByDay = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] }; if (data) data.forEach(item => scheduleByDay[item.day_of_week].push(item)); let tableHtml = `<table class="schedule-table"><thead><tr>${daysOfWeek.map(day => `<th>${day}</th>`).join('')}</tr></thead><tbody><tr>`; for (let i = 1; i <= 7; i++) { tableHtml += `<td>`; scheduleByDay[i].forEach(item => { tableHtml += `<div class="item-card class-item" data-id="${item.id}"><strong>${item.class_name}</strong><br><small>${item.start_time.slice(0, 5)} - ${item.end_time.slice(0, 5)}</small><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`; }); tableHtml += `</td>`; } tableHtml += `</tr></tbody></table>`; contentArea.innerHTML = `<h1>Manage Schedule</h1><button id="add-class-btn" class="btn btn-primary">Add New Class</button><hr>${tableHtml}`; }
-function showAddScheduleForm() { contentArea.innerHTML = `<h1>Add New Class</h1><form class="item-form" id="schedule-form"></form>`; document.getElementById('schedule-form').innerHTML = `<div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" required></div><div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="7">Sunday</option></select></div><div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" required></div><div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" required></div><button type="submit" class="btn btn-primary">Save Class</button>`; document.getElementById('schedule-form').addEventListener('submit', async (e) => { e.preventDefault(); const { error } = await supabase.from('schedule').insert([{ class_name: document.getElementById('class_name').value, day_of_week: document.getElementById('day_of_week').value, start_time: document.getElementById('start_time').value, end_time: document.getElementById('end_time').value }]); if (error) { alert('Failed to add class.'); console.error(error) } else { alert('Class added!'); loadSchedule(); } }); }
-async function showEditScheduleForm(id) { const { data, error } = await supabase.from('schedule').select('*').eq('id', id).single(); if (error) { alert('Could not load class data.'); loadSchedule(); return; } contentArea.innerHTML = `<h1>Edit Class</h1><form class="item-form" id="schedule-edit-form"></form>`; document.getElementById('schedule-edit-form').innerHTML = `<div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" value="${data.class_name}" required></div><div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required></select></div><div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" value="${data.start_time}" required></div><div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" value="${data.end_time}" required></div><button type="submit" class="btn btn-primary">Update Class</button>`; const daySelect = document.getElementById('day_of_week'); const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']; days.forEach((day, index) => { const option = document.createElement('option'); option.value = index + 1; option.textContent = day; if ((index + 1) === data.day_of_week) option.selected = true; daySelect.appendChild(option); }); document.getElementById('schedule-edit-form').addEventListener('submit', async (e) => { e.preventDefault(); const { error } = await supabase.from('schedule').update({ class_name: document.getElementById('class_name').value, day_of_week: document.getElementById('day_of_week').value, start_time: document.getElementById('start_time').value, end_time: document.getElementById('end_time').value }).eq('id', id); if (error) { alert('Failed to update class.'); } else { alert('Class updated!'); loadSchedule(); } }); }
+async function loadSchedule() {
+    contentArea.innerHTML = '<h1>Loading schedule...</h1>';
+    const { data, error } = await supabase.from('schedule').select('*').order('start_time');
+    if (error) { console.error('Error fetching schedule:', error); contentArea.innerHTML = 'Error loading data.'; return; }
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let scheduleByDay = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] };
+    if (data) data.forEach(item => scheduleByDay[item.day_of_week].push(item));
+    let tableHtml = `<table class="schedule-table"><thead><tr>${daysOfWeek.map(day => `<th>${day}</th>`).join('')}</tr></thead><tbody><tr>`;
+    for (let i = 1; i <= 7; i++) {
+        tableHtml += `<td>`;
+        scheduleByDay[i].forEach(item => {
+            tableHtml += `<div class="item-card class-item" data-id="${item.id}"><strong>${item.class_name}</strong><br><small>${item.start_time.slice(0, 5)} - ${item.end_time.slice(0, 5)}</small><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`;
+        });
+        tableHtml += `</td>`;
+    }
+    tableHtml += `</tr></tbody></table>`;
+    contentArea.innerHTML = `<h1>Manage Schedule</h1><button id="add-class-btn" class="btn btn-primary">Add New Class</button><hr>${tableHtml}`;
+}
+function showAddScheduleForm() {
+    contentArea.innerHTML = `<h1>Add New Class</h1><form class="item-form" id="schedule-form"></form>`;
+    document.getElementById('schedule-form').innerHTML = `<div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" required></div><div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="7">Sunday</option></select></div><div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" required></div><div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" required></div><button type="submit" class="btn btn-primary">Save Class</button>`;
+    document.getElementById('schedule-form').addEventListener('submit', async (e) => { e.preventDefault(); const { error } = await supabase.from('schedule').insert([{ class_name: document.getElementById('class_name').value, day_of_week: document.getElementById('day_of_week').value, start_time: document.getElementById('start_time').value, end_time: document.getElementById('end_time').value }]); if (error) { alert('Failed to add class.'); console.error(error) } else { alert('Class added!'); loadSchedule(); } });
+}
+async function showEditScheduleForm(id) {
+    const { data, error } = await supabase.from('schedule').select('*').eq('id', id).single();
+    if (error) { alert('Could not load class data.'); loadSchedule(); return; }
+    contentArea.innerHTML = `<h1>Edit Class</h1><form class="item-form" id="schedule-edit-form"></form>`;
+    document.getElementById('schedule-edit-form').innerHTML = `<div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" value="${data.class_name}" required></div><div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required></select></div><div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" value="${data.start_time}" required></div><div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" value="${data.end_time}" required></div><button type="submit" class="btn btn-primary">Update Class</button>`;
+    const daySelect = document.getElementById('day_of_week');
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    days.forEach((day, index) => { const option = document.createElement('option'); option.value = index + 1; option.textContent = day; if ((index + 1) === data.day_of_week) option.selected = true; daySelect.appendChild(option); });
+    document.getElementById('schedule-edit-form').addEventListener('submit', async (e) => { e.preventDefault(); const { error } = await supabase.from('schedule').update({ class_name: document.getElementById('class_name').value, day_of_week: document.getElementById('day_of_week').value, start_time: document.getElementById('start_time').value, end_time: document.getElementById('end_time').value }).eq('id', id); if (error) { alert('Failed to update class.'); } else { alert('Class updated!'); loadSchedule(); } });
+}
 
 // --- CONTACTS R/D FUNCTIONS ---
 async function loadContacts() {
@@ -214,7 +248,7 @@ async function loadContacts() {
     if (error) { console.error('Error fetching contacts:', error); contentArea.innerHTML = 'Error loading data.'; return; }
     contentArea.innerHTML = `<h1>View Contacts</h1><hr>`;
     if (data.length === 0) { contentArea.innerHTML += '<p>No contact messages yet.</p>'; return; }
-    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card contact-card ${item.is_read ? '' : 'unread'}" data-id="${item.id}"><div class="content"><h3>${item.subject}</h3><div class="meta-info"><strong>From:</strong> ${item.full_name} (${item.email})<br><strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}</div><div class="message-body">${item.message}</div></div><div class="actions"><button class="btn toggle-read-btn" data-id="${item.id}" data-is-read="${item.is_read}">Mark as ${item.is_read ? 'Unread' : 'Read'}</button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
+    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card contact-card" data-id="${item.id}"><div class="content"><h3>${item.subject}</h3><div class="meta-info"><strong>From:</strong> ${item.full_name} (${item.email})<br><strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}</div><div class="message-body">${item.message}</div></div><div class="actions"><button class="btn toggle-read-btn" data-id="${item.id}" data-is-read="${item.is_read}">Mark as ${item.is_read ? 'Unread' : 'Read'}</button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
 }
 
 // --- SESSION CHECK ---
