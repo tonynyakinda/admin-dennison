@@ -26,6 +26,7 @@ loginForm.addEventListener('submit', async (e) => {
         loginError.textContent = '';
     }
 });
+
 logoutButton.addEventListener('click', async () => {
     await supabase.auth.signOut();
     dashboardScreen.style.display = 'none';
@@ -42,12 +43,26 @@ dashboardNav.addEventListener('click', (e) => {
         button.classList.add('active');
         const section = button.dataset.target;
         switch (section) {
-            case 'testimonials': loadTestimonials(); break;
-            case 'merchandise': loadMerchandise(); break;
-            case 'posts': loadPosts(); break;
-            case 'schedule': loadSchedule(); break;
-            case 'contacts': loadContacts(); break;
-            default: contentArea.innerHTML = `<h2>Welcome, Admin!</h2><p>Select a category to begin.</p>`;
+            case 'bookings':
+                loadBookings();
+                break;
+            case 'contacts':
+                loadContacts();
+                break;
+            case 'testimonials':
+                loadTestimonials();
+                break;
+            case 'merchandise':
+                loadMerchandise();
+                break;
+            case 'posts':
+                loadPosts();
+                break;
+            case 'schedule':
+                loadSchedule();
+                break;
+            default:
+                contentArea.innerHTML = `<h2>Welcome, Admin!</h2><p>Select a category to begin.</p>`;
         }
     }
 });
@@ -56,32 +71,46 @@ dashboardNav.addEventListener('click', (e) => {
 contentArea.addEventListener('click', async (e) => {
     const target = e.target.closest('button');
     if (!target) return;
+
     const card = target.closest('.item-card');
     const id = card ? card.dataset.id : null;
+
     if (target.id === 'add-testimonial-btn') return showAddTestimonialForm();
     if (target.id === 'add-merch-btn') return showAddMerchandiseForm();
     if (target.id === 'add-post-btn') return showAddPostForm();
     if (target.id === 'add-class-btn') return showAddScheduleForm();
+
     if (target.classList.contains('edit-btn')) {
         if (card.classList.contains('testimonial-card')) return showEditTestimonialForm(id);
         if (card.classList.contains('merch-card')) return showEditMerchandiseForm(id);
         if (card.classList.contains('post-card')) return showEditPostForm(id);
         if (card.classList.contains('class-item')) return showEditScheduleForm(id);
     }
+
     if (target.classList.contains('delete-btn')) {
+        if (card.classList.contains('booking-card')) return handleDelete('bookings', id, loadBookings);
+        if (card.classList.contains('contact-card')) return handleDelete('contacts', id, loadContacts);
         if (card.classList.contains('testimonial-card')) return handleDelete('testimonials', id, loadTestimonials);
         if (card.classList.contains('merch-card')) return handleDelete('merchandise', id, loadMerchandise);
         if (card.classList.contains('post-card')) return handleDelete('posts', id, loadPosts);
         if (card.classList.contains('class-item')) return handleDelete('schedule', id, loadSchedule);
-        if (card.classList.contains('contact-card')) return handleDelete('contacts', id, loadContacts);
     }
+
     if (target.classList.contains('toggle-read-btn')) {
         const toggleId = target.dataset.id;
         const currentStatus = target.dataset.isRead === 'true';
         const { error } = await supabase.from('contacts').update({ is_read: !currentStatus }).eq('id', toggleId);
         if (error) { alert('Could not update status.'); } else { loadContacts(); }
     }
+
+    if (target.classList.contains('toggle-contacted-btn')) {
+        const toggleId = target.dataset.id;
+        const currentStatus = target.dataset.isContacted === 'true';
+        const { error } = await supabase.from('bookings').update({ is_contacted: !currentStatus }).eq('id', toggleId);
+        if (error) { alert('Could not update status.'); } else { loadBookings(); }
+    }
 });
+
 
 // --- GENERALIZED DELETE FUNCTION ---
 async function handleDelete(tableName, id, callback) {
@@ -90,6 +119,48 @@ async function handleDelete(tableName, id, callback) {
         if (error) { alert('Failed to delete item.'); } else { callback(); }
     }
 }
+
+// --- BOOKINGS R/D FUNCTIONS ---
+async function loadBookings() {
+    contentArea.innerHTML = '<h1>Loading booking requests...</h1>';
+    const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('Error fetching bookings:', error); contentArea.innerHTML = 'Error loading data.'; return; }
+
+    contentArea.innerHTML = `<h1>View Booking Requests</h1><hr>`;
+    if (data.length === 0) {
+        contentArea.innerHTML += '<p>No booking requests yet.</p>';
+        return;
+    }
+
+    data.forEach(item => {
+        contentArea.insertAdjacentHTML('beforeend', `
+            <div class="item-card booking-card ${!item.is_contacted ? 'unread' : ''}" data-id="${item.id}">
+                <div class="content">
+                    <h3>${item.full_name} - <span style="color:var(--primary-orange);">${item.service}</span></h3>
+                    <div class="meta-info">
+                        <strong>Contact:</strong> ${item.email} | ${item.phone}<br>
+                        <strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}
+                    </div>
+                    ${item.message ? `<div class="message-body">${item.message}</div>` : ''}
+                </div>
+                <div class="actions">
+                    <button class="btn toggle-contacted-btn" data-id="${item.id}" data-is-contacted="${item.is_contacted}">Mark as ${item.is_contacted ? 'Pending' : 'Contacted'}</button>
+                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`);
+    });
+}
+
+// --- CONTACTS R/D FUNCTIONS ---
+async function loadContacts() {
+    contentArea.innerHTML = '<h1>Loading contacts...</h1>';
+    const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('Error fetching contacts:', error); contentArea.innerHTML = 'Error loading data.'; return; }
+    contentArea.innerHTML = `<h1>View Contacts</h1><hr>`;
+    if (data.length === 0) { contentArea.innerHTML += '<p>No contact messages yet.</p>'; return; }
+    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card contact-card ${item.is_read ? '' : 'unread'}" data-id="${item.id}"><div class="content"><h3>${item.subject}</h3><div class="meta-info"><strong>From:</strong> ${item.full_name} (${item.email})<br><strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}</div><div class="message-body">${item.message}</div></div><div class="actions"><button class="btn toggle-read-btn" data-id="${item.id}" data-is-read="${item.is_read}">Mark as ${item.is_read ? 'Unread' : 'Read'}</button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
+}
+
 
 // --- TESTIMONIALS CRUD FUNCTIONS ---
 async function loadTestimonials() {
@@ -135,7 +206,7 @@ async function showEditMerchandiseForm(id) {
     document.getElementById('merch-edit-form').addEventListener('submit', async (e) => { e.preventDefault(); const form = e.target; let imageUrl = data.image_url; const imageFile = form.querySelector('#image').files[0]; if (imageFile) { const filePath = `merch-${Date.now()}-${imageFile.name}`; const { error: uploadError } = await supabase.storage.from('merchandise-images').upload(filePath, imageFile); if (uploadError) { alert('Failed to upload new image.'); return; } imageUrl = supabase.storage.from('merchandise-images').getPublicUrl(filePath).data.publicUrl; } const { error: updateError } = await supabase.from('merchandise').update({ name: form.querySelector('#name').value, price: form.querySelector('#price').value, description: form.querySelector('#description').value, image_url: imageUrl, }).eq('id', id); if (updateError) { alert('Failed to update product.'); } else { alert('Product updated successfully!'); loadMerchandise(); } });
 }
 
-// --- POSTS CRUD FUNCTIONS (CORRECTED) ---
+// --- POSTS CRUD FUNCTIONS ---
 async function loadPosts() {
     contentArea.innerHTML = '<h1>Loading posts...</h1>';
     const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
@@ -152,7 +223,6 @@ function showAddPostForm() {
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" required></div>
         <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog">Blog</option><option value="vlog">Vlog</option></select></div>
         <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
-        <div class="form-group"><label for="audio_url">Audio URL (for vlogs, e.g., Spotify)</label><input type="url" id="audio_url" placeholder="https://open.spotify.com/episode/..."></div>
         <div class="form-group"><label for="video_url">Video URL (for vlogs, e.g., YouTube)</label><input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..."></div>
         <div class="form-group"><label for="image">Cover Image</label><input type="file" id="image" accept="image/*" required></div>
         <button type="submit" class="btn btn-primary">Save Post</button>`;
@@ -167,8 +237,10 @@ function showAddPostForm() {
         const { error: uploadError } = await supabase.storage.from('post-images').upload(filePath, imageFile);
         if (uploadError) { alert('Failed to upload image.'); console.error(uploadError); return; }
         const imageUrl = supabase.storage.from('post-images').getPublicUrl(filePath).data.publicUrl;
+
         const content = quill.root.innerHTML;
-        const { error: insertError } = await supabase.from('posts').insert([{ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, audio_url: form.querySelector('#audio_url').value, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }]);
+
+        const { error: insertError } = await supabase.from('posts').insert([{ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }]);
         if (insertError) { alert('Failed to save post data.'); } else { alert('Post added successfully!'); loadPosts(); }
     });
 }
@@ -180,7 +252,6 @@ async function showEditPostForm(id) {
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" value="${data.title}" required></div>
         <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog" ${data.post_type === 'blog' ? 'selected' : ''}>Blog</option><option value="vlog" ${data.post_type === 'vlog' ? 'selected' : ''}>Vlog</option></select></div>
         <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
-        <div class="form-group"><label for="audio_url">Audio URL (for vlogs)</label><input type="url" id="audio_url" value="${data.audio_url || ''}"></div>
         <div class="form-group"><label for="video_url">Video URL (for vlogs)</label><input type="url" id="video_url" value="${data.video_url || ''}"></div>
         <div class="form-group"><label>Current Image</label><br><img src="${data.image_url}" alt="${data.title}" style="width:100px; height:100px; object-fit:cover;"></div>
         <div class="form-group"><label for="image">Upload New Image (optional)</label><input type="file" id="image" accept="image/*"></div>
@@ -200,8 +271,10 @@ async function showEditPostForm(id) {
             if (uploadError) { alert('Failed to upload new image.'); return; }
             imageUrl = supabase.storage.from('post-images').getPublicUrl(filePath).data.publicUrl;
         }
+
         const content = quill.root.innerHTML;
-        const { error: updateError } = await supabase.from('posts').update({ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, audio_url: form.querySelector('#audio_url').value, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }).eq('id', id);
+
+        const { error: updateError } = await supabase.from('posts').update({ title: form.querySelector('#title').value, post_type: form.querySelector('#post_type').value, content: content, video_url: form.querySelector('#video_url').value, image_url: imageUrl, }).eq('id', id);
         if (updateError) { alert('Failed to update post.'); } else { alert('Post updated successfully!'); loadPosts(); }
     });
 }
@@ -239,16 +312,6 @@ async function showEditScheduleForm(id) {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     days.forEach((day, index) => { const option = document.createElement('option'); option.value = index + 1; option.textContent = day; if ((index + 1) === data.day_of_week) option.selected = true; daySelect.appendChild(option); });
     document.getElementById('schedule-edit-form').addEventListener('submit', async (e) => { e.preventDefault(); const { error } = await supabase.from('schedule').update({ class_name: document.getElementById('class_name').value, day_of_week: document.getElementById('day_of_week').value, start_time: document.getElementById('start_time').value, end_time: document.getElementById('end_time').value }).eq('id', id); if (error) { alert('Failed to update class.'); } else { alert('Class updated!'); loadSchedule(); } });
-}
-
-// --- CONTACTS R/D FUNCTIONS ---
-async function loadContacts() {
-    contentArea.innerHTML = '<h1>Loading contacts...</h1>';
-    const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
-    if (error) { console.error('Error fetching contacts:', error); contentArea.innerHTML = 'Error loading data.'; return; }
-    contentArea.innerHTML = `<h1>View Contacts</h1><hr>`;
-    if (data.length === 0) { contentArea.innerHTML += '<p>No contact messages yet.</p>'; return; }
-    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card contact-card" data-id="${item.id}"><div class="content"><h3>${item.subject}</h3><div class="meta-info"><strong>From:</strong> ${item.full_name} (${item.email})<br><strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}</div><div class="message-body">${item.message}</div></div><div class="actions"><button class="btn toggle-read-btn" data-id="${item.id}" data-is-read="${item.is_read}">Mark as ${item.is_read ? 'Unread' : 'Read'}</button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
 }
 
 // --- SESSION CHECK ---
