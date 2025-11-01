@@ -243,7 +243,7 @@ async function loadMerchandise() {
     if (error) { console.error('Error fetching merchandise:', error); contentArea.innerHTML = 'Error loading data.'; return; }
     contentArea.innerHTML = `<h1>Manage Merchandise</h1><button id="add-merch-btn" class="btn btn-primary">Add New Product</button><hr>`;
     if (data.length === 0) { contentArea.innerHTML += '<p>No products found. Click "Add New" to start.</p>'; return; }
-    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card merch-card" data-id="${item.id}"><img src="${item.image_url}" alt="${item.name}"><div class="content"><h3>${item.name}</h3><p><strong>Price:</strong> $${item.price}</p><p>${item.description || ''}</p></div><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
+    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card merch-card" data-id="${item.id}"><img src="${item.image_url}" alt="${item.name}"><div class="content"><h3>${item.name}</h3><p><strong>Price:</strong> Ksh${item.price}</p><p>${item.description || ''}</p></div><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
 }
 function showAddMerchandiseForm() {
     contentArea.innerHTML = `<h1>Add New Product</h1><form class="item-form" id="merch-form"></form>`;
