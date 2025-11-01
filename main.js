@@ -143,13 +143,7 @@ async function loadServices() {
     if (error) { console.error('Error fetching services:', error); contentArea.innerHTML = 'Error loading data.'; return; }
     contentArea.innerHTML = `<h1>Manage Service Pricing</h1><hr>`;
     if (data.length === 0) { contentArea.innerHTML += '<p>No services found. Please setup the services table in Supabase.</p>'; return; }
-
-    const serviceTitles = {
-        'one-on-one': 'One-on-One Personal Training',
-        'online': 'Online Coaching',
-        'nutrition': 'Nutrition Coaching'
-    };
-
+    const serviceTitles = { 'one-on-one': 'One-on-One Personal Training', 'online': 'Online Coaching', 'nutrition': 'Nutrition Coaching' };
     data.forEach(item => {
         contentArea.insertAdjacentHTML('beforeend', `
             <div class="item-card service-card" data-id="${item.id}">
@@ -166,10 +160,8 @@ async function loadServices() {
 async function showEditServiceForm(id) {
     const { data, error } = await supabase.from('services').select('*').eq('id', id).single();
     if (error) { alert('Could not load service pricing.'); loadServices(); return; }
-
     const serviceTitles = { 'one-on-one': 'One-on-One', 'online': 'Online', 'nutrition': 'Nutrition' };
     const title = serviceTitles[id] || 'Service';
-
     const pricingTiersHtml = data.pricing.tiers.map((tier, index) => `
         <div class="form-group pricing-tier-group">
             <h4>Tier ${index + 1}</h4>
@@ -181,7 +173,6 @@ async function showEditServiceForm(id) {
             <input type="text" class="pricing-note" value="${tier.note || ''}">
         </div>
     `).join('<hr style="border-style: dashed; margin: 1rem 0;">');
-
     contentArea.innerHTML = `
         <h1>Edit Pricing for ${title}</h1>
         <form class="item-form" id="service-edit-form">
@@ -190,29 +181,17 @@ async function showEditServiceForm(id) {
             <button type="submit" class="btn btn-primary">Update Pricing</button>
         </form>
     `;
-
     document.getElementById('service-edit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
         const tiers = [];
-        form.querySelectorAll('.pricing-tier-group').forEach(container => {
-            tiers.push({
-                name: container.querySelector('.pricing-name').value,
-                price: container.querySelector('.pricing-price').value,
-                note: container.querySelector('.pricing-note').value,
-            });
-        });
-
-        const updatedData = {
-            pricing: { tiers: tiers }
-        };
-
+        form.querySelectorAll('.pricing-tier-group').forEach(container => { tiers.push({ name: container.querySelector('.pricing-name').value, price: container.querySelector('.pricing-price').value, note: container.querySelector('.pricing-note').value, }); });
+        const updatedData = { pricing: { tiers: tiers } };
         const { error: updateError } = await supabase.from('services').update(updatedData).eq('id', id);
         if (updateError) { alert('Failed to update pricing.'); console.error(updateError); }
         else { alert('Pricing updated successfully!'); loadServices(); }
     });
 }
-
 
 // --- TESTIMONIALS CRUD FUNCTIONS ---
 async function loadTestimonials() {
@@ -243,7 +222,7 @@ async function loadMerchandise() {
     if (error) { console.error('Error fetching merchandise:', error); contentArea.innerHTML = 'Error loading data.'; return; }
     contentArea.innerHTML = `<h1>Manage Merchandise</h1><button id="add-merch-btn" class="btn btn-primary">Add New Product</button><hr>`;
     if (data.length === 0) { contentArea.innerHTML += '<p>No products found. Click "Add New" to start.</p>'; return; }
-    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card merch-card" data-id="${item.id}"><img src="${item.image_url}" alt="${item.name}"><div class="content"><h3>${item.name}</h3><p><strong>Price:</strong> Ksh${item.price}</p><p>${item.description || ''}</p></div><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
+    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card merch-card" data-id="${item.id}"><img src="${item.image_url}" alt="${item.name}"><div class="content"><h3>${item.name}</h3><p><strong>Price:</strong> $${item.price}</p><p>${item.description || ''}</p></div><div class="actions"><button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
 }
 function showAddMerchandiseForm() {
     contentArea.innerHTML = `<h1>Add New Product</h1><form class="item-form" id="merch-form"></form>`;
