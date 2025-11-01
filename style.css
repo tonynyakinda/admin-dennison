@@ -535,3 +535,43 @@ form.item-form {
         justify-content: center;
     }
 }
+
+/* === NEW STYLES FOR ADVANCED QUILL EDITOR FONTS === */
+/* This allows the font dropdown to show the font names. */
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=sans-serif]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=sans-serif]::before {
+    content: 'Sans Serif';
+    font-family: sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=serif]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=serif]::before {
+    content: 'Serif';
+    font-family: serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=monospace]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=monospace]::before {
+    content: 'Monospace';
+    font-family: monospace;
+}
+
+/* We need to do the same for our custom Google Fonts */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=roboto]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=roboto]::before {
+    content: 'Roboto';
+    font-family: 'Roboto', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=lora]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=lora]::before {
+    content: 'Lora';
+    font-family: 'Lora', serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=inconsolata]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=inconsolata]::before {
+    content: 'Inconsolata';
+    font-family: 'Inconsolata', monospace;
+}

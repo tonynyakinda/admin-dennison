@@ -14,6 +14,28 @@ const logoutButton = document.getElementById('logout-button');
 const contentArea = document.getElementById('content-area');
 const dashboardNav = document.querySelector('#dashboard-screen nav');
 
+// --- NEW: Full Toolbar Configuration ---
+// This defines all the new buttons and dropdowns for our advanced editor.
+const fullToolbarOptions = [
+    [{ 'font': [] }], // Font family dropdown
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }], // Header dropdown
+
+    ['bold', 'italic', 'underline', 'strike'], // Toggled buttons
+    [{ 'color': [] }, { 'background': [] }], // Color and background color dropdowns
+
+    [{ 'script': 'sub' }, { 'script': 'super' }], // Subscript/superscript
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }], // Lists
+    [{ 'indent': '-1' }, { 'indent': '+1' }], // Indent
+    [{ 'direction': 'rtl' }], // Text direction
+
+    [{ 'align': [] }], // Text alignment dropdown
+
+    ['link', 'image', 'video', 'blockquote', 'code-block'], // Block and embed tools
+
+    ['clean'] // Remove formatting button
+];
+
+
 // --- AUTHENTICATION LOGIC ---
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -258,7 +280,13 @@ function showAddPostForm() {
         <div class="form-group"><label for="image">Cover Image</label><input type="file" id="image" accept="image/*" required></div>
         <button type="submit" class="btn btn-primary">Save Post</button>`;
 
-    const quill = new Quill('#content-editor', { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], ['link'], [{ 'header': 1 }, { 'header': 2 }], [{ 'list': 'ordered' }, { 'list': 'bullet' }]] } });
+    // Use the new fullToolbarOptions to create the advanced editor.
+    const quill = new Quill('#content-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: fullToolbarOptions
+        }
+    });
 
     document.getElementById('post-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -288,7 +316,13 @@ async function showEditPostForm(id) {
         <div class="form-group"><label for="image">Upload New Image (optional)</label><input type="file" id="image" accept="image/*"></div>
         <button type="submit" class="btn btn-primary">Update Post</button>`;
 
-    const quill = new Quill('#content-editor', { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], ['link'], [{ 'header': 1 }, { 'header': 2 }], [{ 'list': 'ordered' }, { 'list': 'bullet' }]] } });
+    // Use the new fullToolbarOptions here as well for the edit form.
+    const quill = new Quill('#content-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: fullToolbarOptions
+        }
+    });
     quill.root.innerHTML = data.content || '';
 
     document.getElementById('post-edit-form').addEventListener('submit', async (e) => {
