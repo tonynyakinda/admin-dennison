@@ -26,7 +26,6 @@ loginForm.addEventListener('submit', async (e) => {
         loginError.textContent = '';
     }
 });
-
 logoutButton.addEventListener('click', async () => {
     await supabase.auth.signOut();
     dashboardScreen.style.display = 'none';
@@ -48,6 +47,9 @@ dashboardNav.addEventListener('click', (e) => {
                 break;
             case 'contacts':
                 loadContacts();
+                break;
+            case 'services':
+                loadServices();
                 break;
             case 'testimonials':
                 loadTestimonials();
@@ -71,7 +73,6 @@ dashboardNav.addEventListener('click', (e) => {
 contentArea.addEventListener('click', async (e) => {
     const target = e.target.closest('button');
     if (!target) return;
-
     const card = target.closest('.item-card');
     const id = card ? card.dataset.id : null;
 
@@ -81,6 +82,7 @@ contentArea.addEventListener('click', async (e) => {
     if (target.id === 'add-class-btn') return showAddScheduleForm();
 
     if (target.classList.contains('edit-btn')) {
+        if (card.classList.contains('service-card')) return showEditServiceForm(id);
         if (card.classList.contains('testimonial-card')) return showEditTestimonialForm(id);
         if (card.classList.contains('merch-card')) return showEditMerchandiseForm(id);
         if (card.classList.contains('post-card')) return showEditPostForm(id);
@@ -111,7 +113,6 @@ contentArea.addEventListener('click', async (e) => {
     }
 });
 
-
 // --- GENERALIZED DELETE FUNCTION ---
 async function handleDelete(tableName, id, callback) {
     if (confirm(`Are you sure you want to delete this item?`)) {
@@ -125,30 +126,9 @@ async function loadBookings() {
     contentArea.innerHTML = '<h1>Loading booking requests...</h1>';
     const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
     if (error) { console.error('Error fetching bookings:', error); contentArea.innerHTML = 'Error loading data.'; return; }
-
     contentArea.innerHTML = `<h1>View Booking Requests</h1><hr>`;
-    if (data.length === 0) {
-        contentArea.innerHTML += '<p>No booking requests yet.</p>';
-        return;
-    }
-
-    data.forEach(item => {
-        contentArea.insertAdjacentHTML('beforeend', `
-            <div class="item-card booking-card ${!item.is_contacted ? 'unread' : ''}" data-id="${item.id}">
-                <div class="content">
-                    <h3>${item.full_name} - <span style="color:var(--primary-orange);">${item.service}</span></h3>
-                    <div class="meta-info">
-                        <strong>Contact:</strong> ${item.email} | ${item.phone}<br>
-                        <strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}
-                    </div>
-                    ${item.message ? `<div class="message-body">${item.message}</div>` : ''}
-                </div>
-                <div class="actions">
-                    <button class="btn toggle-contacted-btn" data-id="${item.id}" data-is-contacted="${item.is_contacted}">Mark as ${item.is_contacted ? 'Pending' : 'Contacted'}</button>
-                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            </div>`);
-    });
+    if (data.length === 0) { contentArea.innerHTML += '<p>No booking requests yet.</p>'; return; }
+    data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card booking-card ${!item.is_contacted ? 'unread' : ''}" data-id="${item.id}"><div class="content"><h3>${item.full_name} - <span style="color:var(--primary-orange);">${item.service}</span></h3><div class="meta-info"><strong>Contact:</strong> ${item.email} | ${item.phone}<br><strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}</div>${item.message ? `<div class="message-body">${item.message}</div>` : ''}</div><div class="actions"><button class="btn toggle-contacted-btn" data-id="${item.id}" data-is-contacted="${item.is_contacted}">Mark as ${item.is_contacted ? 'Pending' : 'Contacted'}</button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
 }
 
 // --- CONTACTS R/D FUNCTIONS ---
@@ -161,6 +141,68 @@ async function loadContacts() {
     data.forEach(item => { contentArea.insertAdjacentHTML('beforeend', `<div class="item-card contact-card ${item.is_read ? '' : 'unread'}" data-id="${item.id}"><div class="content"><h3>${item.subject}</h3><div class="meta-info"><strong>From:</strong> ${item.full_name} (${item.email})<br><strong>Received:</strong> ${new Date(item.created_at).toLocaleString()}</div><div class="message-body">${item.message}</div></div><div class="actions"><button class="btn toggle-read-btn" data-id="${item.id}" data-is-read="${item.is_read}">Mark as ${item.is_read ? 'Unread' : 'Read'}</button><button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button></div></div>`); });
 }
 
+// --- SERVICES CRUD FUNCTIONS ---
+async function loadServices() {
+    contentArea.innerHTML = '<h1>Loading services...</h1>';
+    const { data, error } = await supabase.from('services').select('*');
+    if (error) { console.error('Error fetching services:', error); contentArea.innerHTML = 'Error loading data.'; return; }
+    contentArea.innerHTML = `<h1>Manage Services & Pricing</h1><hr>`;
+    if (data.length === 0) { contentArea.innerHTML += '<p>No services found. There might be an issue with the database setup.</p>'; return; }
+    data.forEach(item => {
+        contentArea.insertAdjacentHTML('beforeend', `
+            <div class="item-card service-card" data-id="${item.id}">
+                <div class="content">
+                    <h3>${item.title}</h3>
+                    <p>${item.description}</p>
+                </div>
+                <div class="actions">
+                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i> Edit</button>
+                </div>
+            </div>`);
+    });
+}
+async function showEditServiceForm(id) {
+    const { data, error } = await supabase.from('services').select('*').eq('id', id).single();
+    if (error) { alert('Could not load service data.'); loadServices(); return; }
+    const featuresForHtml = data.features.for.map(item => `<li>${item}</li>`).join('');
+    const featuresIncludesHtml = data.features.includes.map(item => `<li>${item}</li>`).join('');
+    const pricingTiersHtml = data.pricing.tiers.map((tier, index) => `
+        <div class="form-group">
+            <label>Tier ${index + 1}: Name</label>
+            <input type="text" class="pricing-name" value="${tier.name}" required>
+            <label>Tier ${index + 1}: Price</label>
+            <input type="text" class="pricing-price" value="${tier.price}" required>
+            <label>Tier ${index + 1}: Note (optional)</label>
+            <input type="text" class="pricing-note" value="${tier.note || ''}">
+        </div>
+        <hr style="border-style: dashed; margin: 1rem 0;">
+    `).join('');
+    contentArea.innerHTML = `
+        <h1>Edit: ${data.title}</h1>
+        <form class="item-form" id="service-edit-form">
+            <div class="form-group"><label for="title">Service Title</label><input type="text" id="title" value="${data.title}" required></div>
+            <div class="form-group"><label for="description">Description</label><textarea id="description" rows="4" required>${data.description}</textarea></div>
+            <h3>Features ("Who this is for")</h3>
+            <div class="form-group"><label>List Items (one per line)</label><textarea id="features-for" rows="5">${data.features.for.join('\n')}</textarea></div>
+            <h3>Features ("What's Included")</h3>
+            <div class="form-group"><label>List Items (one per line)</label><textarea id="features-includes" rows="6">${data.features.includes.join('\n')}</textarea></div>
+            <h3>Pricing Tiers</h3>
+            <div id="pricing-tiers-container">${pricingTiersHtml}</div>
+            <button type="submit" class="btn btn-primary">Update Service</button>
+        </form>
+    `;
+    document.getElementById('service-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const tiers = [];
+        const tierContainers = form.querySelectorAll('#pricing-tiers-container .form-group');
+        tierContainers.forEach(container => { tiers.push({ name: container.querySelector('.pricing-name').value, price: container.querySelector('.pricing-price').value, note: container.querySelector('.pricing-note').value, }); });
+        const updatedData = { title: form.querySelector('#title').value, description: form.querySelector('#description').value, features: { for: form.querySelector('#features-for').value.split('\n').filter(line => line.trim() !== ''), includes: form.querySelector('#features-includes').value.split('\n').filter(line => line.trim() !== '') }, pricing: { tiers: tiers } };
+        const { error: updateError } = await supabase.from('services').update(updatedData).eq('id', id);
+        if (updateError) { alert('Failed to update service.'); console.error(updateError); }
+        else { alert('Service updated successfully!'); loadServices(); }
+    });
+}
 
 // --- TESTIMONIALS CRUD FUNCTIONS ---
 async function loadTestimonials() {
