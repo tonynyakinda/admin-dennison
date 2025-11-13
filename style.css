@@ -575,3 +575,87 @@ form.item-form {
     content: 'Inconsolata';
     font-family: 'Inconsolata', monospace;
 }
+
+/* css/style.css */
+
+/* === NEW: CUSTOM ALERT / TOAST NOTIFICATION STYLES === */
+.custom-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    /* Higher than the modal */
+    background-color: var(--white);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 300px;
+    max-width: 400px;
+    border-left: 5px solid var(--charcoal-gray);
+    /* Default border color */
+
+    /* Animation properties */
+    transform: translateX(calc(100% + 30px));
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out, visibility 0.5s;
+}
+
+.custom-alert.active {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-alert .alert-message {
+    margin: 0;
+    font-weight: 500;
+    line-height: 1.5;
+    flex-grow: 1;
+}
+
+.custom-alert .close-alert {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--charcoal-gray);
+    cursor: pointer;
+    padding: 0 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.custom-alert .close-alert:hover {
+    opacity: 1;
+}
+
+/* Modifier classes for different alert types */
+.custom-alert.alert-success {
+    border-left-color: #28a745;
+    /* Green for success */
+}
+
+.custom-alert.alert-success .alert-message {
+    color: #155724;
+}
+
+.custom-alert.alert-error {
+    border-left-color: #dc3545;
+    /* Red for error */
+}
+
+.custom-alert.alert-error .alert-message {
+    color: #721c24;
+}
+
+.custom-alert.alert-info {
+    border-left-color: #17a2b8;
+    /* Blue for info */
+}
+
+.custom-alert.alert-info .alert-message {
+    color: #0c5460;
+}
