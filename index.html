@@ -10,13 +10,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap"
         rel="stylesheet">
-
-    <!-- ADDED FONT LINKS FOR THE NEW EDITOR -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Lora&family=Inconsolata&display=swap"
         rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -24,6 +19,7 @@
 
 <body>
 
+    <!-- === LOGIN SCREEN === -->
     <div id="login-screen" class="screen">
         <div class="login-container">
             <div class="login-brand-panel">
@@ -49,6 +45,7 @@
         </div>
     </div>
 
+    <!-- === DASHBOARD SCREEN === -->
     <div id="dashboard-screen" class="screen" style="display: none;">
         <header class="dashboard-header">
             <div class="header-logo">
@@ -75,17 +72,30 @@
                 <button data-target="schedule"><i class="fa-solid fa-calendar-week fa-fw"></i><span class="button-text">
                         Manage Schedule</span></button>
             </nav>
-            <section id="content-area">
-                <!-- Data will be loaded here by JavaScript -->
-            </section>
+            <section id="content-area"><!-- Dynamic content is loaded here --></section>
         </main>
     </div>
+
+    <!-- === UI MODAL/ALERT ELEMENTS === -->
     <div id="custom-alert" class="custom-alert">
         <p class="alert-message"></p>
         <button class="close-alert">&times;</button>
     </div>
+    <div id="confirm-modal" class="confirm-modal">
+        <div class="confirm-dialog">
+            <h3 class="confirm-title">Are you sure?</h3>
+            <p class="confirm-text">This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button id="confirm-btn-no" class="btn btn-secondary">Cancel</button>
+                <button id="confirm-btn-yes" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- === FINAL SCRIPT SETUP === -->
+    <!-- This single script tag is all you need. -->
     <script type="module" src="main.js"></script>
+
 </body>
 
 </html>

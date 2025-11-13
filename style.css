@@ -8,6 +8,8 @@
     --text-primary: #333;
     --text-secondary: #777;
     --danger: #dc3545;
+    --success: #28a745;
+    --info: #17a2b8;
     --border-color: #dee2e6;
     --heading-font: 'Montserrat', sans-serif;
     --body-font: 'Open Sans', sans-serif;
@@ -21,9 +23,12 @@
 }
 
 body {
+    /* === THE CRITICAL FIX IS HERE === */
+    position: relative;
+    /* Provides a stable containing block for positioned children */
+
     font-family: var(--body-font);
     margin: 0;
-    zoom: 75%;
     background-color: var(--light-bg);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
@@ -353,11 +358,13 @@ form.item-form {
 }
 
 .testimonial-card .content,
-.contact-card .content {
+.contact-card .content,
+.booking-card .content {
     width: 100%;
 }
 
-.contact-card .message-body {
+.contact-card .message-body,
+.booking-card .message-body {
     background-color: #f8f9fa;
     padding: 1rem;
     border-radius: 4px;
@@ -365,7 +372,8 @@ form.item-form {
     margin-top: 1rem;
 }
 
-.contact-card.unread {
+.contact-card.unread,
+.booking-card.unread {
     border-left: 5px solid var(--primary-orange);
 }
 
@@ -409,182 +417,12 @@ form.item-form {
     color: var(--white);
 }
 
-/*
-===============================
-=== RESPONSIVE STYLES (NEW) ===
-===============================
-*/
-
-/* For Tablets and smaller */
-@media (max-width: 992px) {
-    .login-container {
-        grid-template-columns: 1fr;
-        /* Stack login panels */
-    }
-
-    .login-brand-panel {
-        display: none;
-        /* Hide brand panel on smaller screens for simplicity */
-    }
-
-    .login-form-panel {
-        padding: 2rem;
-    }
-
-    .sidebar {
-        width: 80px;
-        /* Shrink sidebar */
-        padding: 1.5rem 0.5rem;
-    }
-
-    .sidebar button {
-        justify-content: center;
-    }
-
-    .sidebar .button-text {
-        /* Add a class to the text part if you want to hide it */
-        display: none;
-    }
-
-    .sidebar button .fa-fw {
-        margin-right: 0;
-        font-size: 1.2rem;
-    }
-
-    .dashboard-header {
-        padding: 0 1rem;
-    }
-}
-
-/* For Mobile phones */
-@media (max-width: 576px) {
-    .dashboard-main {
-        flex-direction: column;
-        /* Stack sidebar on top of content */
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        display: flex;
-        overflow-x: auto;
-        /* Allow horizontal scrolling for buttons */
-        padding: 0.5rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .sidebar button {
-        flex-direction: column;
-        align-items: center;
-        padding: 0.5rem;
-        font-size: 0.7rem;
-        white-space: normal;
-        min-width: 80px;
-    }
-
-    .sidebar button .fa-fw {
-        margin-right: 0;
-        margin-bottom: 0.25rem;
-        font-size: 1.5rem;
-    }
-
-    #content-area {
-        padding: 1rem;
-        height: auto;
-        /* Let content determine height */
-    }
-
-    #content-area>h1 {
-        font-size: 1.5rem;
-    }
-
-    .item-card {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .item-card .actions {
-        margin-left: 0;
-        margin-top: 1rem;
-        width: 100%;
-    }
-
-    .item-card .actions .btn {
-        flex-grow: 1;
-        /* Make buttons take up equal space */
-    }
-
-    .schedule-container {
-        overflow-x: auto;
-        /* Enable horizontal scrolling for the table */
-    }
-
-    .schedule-table {
-        min-width: 700px;
-    }
-
-    .login-container {
-        margin: 0;
-        border-radius: 0;
-        height: 100vh;
-    }
-
-    .login-form-panel {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-}
-
-/* === NEW STYLES FOR ADVANCED QUILL EDITOR FONTS === */
-/* This allows the font dropdown to show the font names. */
-
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=sans-serif]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=sans-serif]::before {
-    content: 'Sans Serif';
-    font-family: sans-serif;
-}
-
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=serif]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=serif]::before {
-    content: 'Serif';
-    font-family: serif;
-}
-
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=monospace]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=monospace]::before {
-    content: 'Monospace';
-    font-family: monospace;
-}
-
-/* We need to do the same for our custom Google Fonts */
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=roboto]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=roboto]::before {
-    content: 'Roboto';
-    font-family: 'Roboto', sans-serif;
-}
-
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=lora]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=lora]::before {
-    content: 'Lora';
-    font-family: 'Lora', serif;
-}
-
-.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=inconsolata]::before,
-.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=inconsolata]::before {
-    content: 'Inconsolata';
-    font-family: 'Inconsolata', monospace;
-}
-
-/* css/style.css */
-
-/* === NEW: CUSTOM ALERT / TOAST NOTIFICATION STYLES === */
+/* === CUSTOM ALERT / TOAST NOTIFICATION STYLES === */
 .custom-alert {
     position: fixed;
     top: 20px;
     right: 20px;
     z-index: 10001;
-    /* Higher than the modal */
     background-color: var(--white);
     padding: 1.25rem 1.5rem;
     border-radius: var(--border-radius);
@@ -595,9 +433,6 @@ form.item-form {
     min-width: 300px;
     max-width: 400px;
     border-left: 5px solid var(--charcoal-gray);
-    /* Default border color */
-
-    /* Animation properties */
     transform: translateX(calc(100% + 30px));
     opacity: 0;
     visibility: hidden;
@@ -632,10 +467,8 @@ form.item-form {
     opacity: 1;
 }
 
-/* Modifier classes for different alert types */
 .custom-alert.alert-success {
-    border-left-color: #28a745;
-    /* Green for success */
+    border-left-color: var(--success);
 }
 
 .custom-alert.alert-success .alert-message {
@@ -643,8 +476,7 @@ form.item-form {
 }
 
 .custom-alert.alert-error {
-    border-left-color: #dc3545;
-    /* Red for error */
+    border-left-color: var(--danger);
 }
 
 .custom-alert.alert-error .alert-message {
@@ -652,10 +484,228 @@ form.item-form {
 }
 
 .custom-alert.alert-info {
-    border-left-color: #17a2b8;
-    /* Blue for info */
+    border-left-color: var(--info);
 }
 
 .custom-alert.alert-info .alert-message {
     color: #0c5460;
+}
+
+/* === CUSTOM CONFIRMATION MODAL STYLES === */
+.confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 10002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.confirm-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.confirm-dialog {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.confirm-modal.active .confirm-dialog {
+    transform: scale(1);
+}
+
+.confirm-dialog .confirm-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.confirm-dialog .confirm-text {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.confirm-dialog .confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.confirm-dialog .btn-danger {
+    background-color: var(--danger);
+    color: var(--white);
+}
+
+.confirm-dialog .btn-danger:hover {
+    background-color: #c82333;
+}
+
+/* === RESPONSIVE STYLES === */
+@media (max-width: 992px) {
+    .login-container {
+        grid-template-columns: 1fr;
+    }
+
+    .login-brand-panel {
+        display: none;
+    }
+
+    .login-form-panel {
+        padding: 2rem;
+    }
+
+    .sidebar {
+        width: 80px;
+        padding: 1.5rem 0.5rem;
+    }
+
+    .sidebar button {
+        justify-content: center;
+    }
+
+    .sidebar .button-text {
+        display: none;
+    }
+
+    .sidebar button .fa-fw {
+        margin-right: 0;
+        font-size: 1.2rem;
+    }
+
+    .dashboard-header {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-main {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        display: flex;
+        overflow-x: auto;
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar button {
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem;
+        font-size: 0.7rem;
+        white-space: normal;
+        min-width: 80px;
+    }
+
+    .sidebar button .fa-fw {
+        margin-right: 0;
+        margin-bottom: 0.25rem;
+        font-size: 1.5rem;
+    }
+
+    #content-area {
+        padding: 1rem;
+        height: auto;
+    }
+
+    #content-area>h1 {
+        font-size: 1.5rem;
+    }
+
+    .item-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .item-card .actions {
+        margin-left: 0;
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .item-card .actions .btn {
+        flex-grow: 1;
+    }
+
+    .schedule-container {
+        overflow-x: auto;
+    }
+
+    .schedule-table {
+        min-width: 700px;
+    }
+
+    .login-container {
+        margin: 0;
+        border-radius: 0;
+        height: 100vh;
+    }
+
+    .login-form-panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .custom-alert {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+    }
+}
+
+/* Quill Editor Font Display Styles */
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=sans-serif]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=sans-serif]::before {
+    content: 'Sans Serif';
+    font-family: sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=serif]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=serif]::before {
+    content: 'Serif';
+    font-family: serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=monospace]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=monospace]::before {
+    content: 'Monospace';
+    font-family: monospace;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=roboto]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=roboto]::before {
+    content: 'Roboto';
+    font-family: 'Roboto', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=lora]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=lora]::before {
+    content: 'Lora';
+    font-family: 'Lora', serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=inconsolata]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=inconsolata]::before {
+    content: 'Inconsolata';
+    font-family: 'Inconsolata', monospace;
 }
