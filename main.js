@@ -507,7 +507,57 @@ async function showEditScheduleForm(id) {
     });
 }
 
-// --- SESSION CHECK ---
+
+// --- EVENTS MANAGEMENT ---
+
+async function loadEvents() {
+    contentArea.innerHTML = '<h1>Loading events...</h1>';
+    const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('event_date', { ascending: false });
+    
+    if (error) {
+        console.error('Error fetching events:', error);
+        contentArea.innerHTML = 'Error loading data.';
+        return;
+    }
+
+    contentArea.innerHTML = `<h1>Manage Events</h1><button id="add-event-btn" class="btn btn-primary">Add New Event</button><hr>`;
+    
+    if (data.length === 0) {
+        contentArea.innerHTML += '<p>No events found. Click "Add New" to start.</p>';
+        return;
+    }
+
+    data.forEach(event => {
+        const eventDate = new Date(event.event_date);
+        const formattedDate = eventDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const eventCard = `
+            <div class="item-card event-card" data-id="${event.id}">
+                <img src="${event.poster_url}" alt="${event.title}" style="width:150px; height:150px; object-fit:cover; border-radius:8px;">
+                <div class="content">
+                    <h3>${event.title}</h3>
+                    <p><strong>Date:</strong> ${formattedDate} at ${event.event_time}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <p><strong>Type:</strong> ${event.event_type || 'N/A'}</p>
+                    <p><strong>Status:</strong> ${event.status || 'upcoming'}</p>
+                    ${event.description ? `<p>${event.description.substring(0, 100)}...</p>` : ''}
+                </div>
+                <div class="actions">
+                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i> Edit</button>
+                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i> Delete</button>
+                </div>
+            </div>`;
+        contentArea.insertAdjacentHTML('beforeend', eventCard);
+    });
+}// --- SESSION CHECK ---
 async function checkSession() {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
