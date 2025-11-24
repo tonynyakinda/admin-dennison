@@ -138,62 +138,15 @@ logoutButton.addEventListener('click', async () => {
 });
 
 // --- DASHBOARD ROUTER ---
-dashboardNav.addEventListener('click', (e) => {
-    const button = e.target.closest('button');
-    if (button) {
-        document.querySelectorAll('.sidebar button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        const section = button.dataset.target;
-        switch (section) {
-            case 'bookings': loadBookings(); break;
-            case 'contacts': loadContacts(); break;
-            case 'services': loadServices(); break;
-            case 'testimonials': loadTestimonials(); break;
-            case 'merchandise': loadMerchandise(); break;
-            case 'posts': loadPosts(); break;
-            case 'schedule': loadSchedule(); break;
-            default: contentArea.innerHTML = `<h2>Welcome, Admin!</h2><p>Select a category to begin.</p>`;
-        }
-    }
-});
-
-// --- DYNAMIC CONTENT EVENT LISTENER ---
-contentArea.addEventListener('click', async (e) => {
-    const target = e.target.closest('button');
-    if (!target) return;
-    const card = target.closest('.item-card');
-    const id = card ? card.dataset.id : null;
-    if (target.id === 'add-testimonial-btn') return showAddTestimonialForm();
-    if (target.id === 'add-merch-btn') return showAddMerchandiseForm();
-    if (target.id === 'add-post-btn') return showAddPostForm();
-    if (target.id === 'add-class-btn') return showAddScheduleForm();
-    if (target.classList.contains('edit-btn')) {
-        if (card.classList.contains('service-card')) return showEditServiceForm(id);
-        if (card.classList.contains('testimonial-card')) return showEditTestimonialForm(id);
-        if (card.classList.contains('merch-card')) return showEditMerchandiseForm(id);
-        if (card.classList.contains('post-card')) return showEditPostForm(id);
-        if (card.classList.contains('class-item')) return showEditScheduleForm(id);
-    }
-    if (target.classList.contains('delete-btn')) {
-        if (card.classList.contains('booking-card')) return handleDelete('bookings', id, loadBookings);
-        if (card.classList.contains('contact-card')) return handleDelete('contacts', id, loadContacts);
-        if (card.classList.contains('testimonial-card')) return handleDelete('testimonials', id, loadTestimonials);
-        if (card.classList.contains('merch-card')) return handleDelete('merchandise', id, loadMerchandise);
-        if (card.classList.contains('post-card')) return handleDelete('posts', id, loadPosts);
-        if (card.classList.contains('class-item')) return handleDelete('schedule', id, loadSchedule);
-    }
-    if (target.classList.contains('toggle-read-btn')) {
-        const toggleId = target.dataset.id;
-        const currentStatus = target.dataset.isRead === 'true';
-        const { error } = await supabase.from('contacts').update({ is_read: !currentStatus }).eq('id', toggleId);
-        if (error) { showAlert('Could not update status.', 'error'); } else { loadContacts(); }
-    }
-    if (target.classList.contains('toggle-contacted-btn')) {
-        const toggleId = target.dataset.id;
-        const currentStatus = target.dataset.isContacted === 'true';
-        const { error } = await supabase.from('bookings').update({ is_contacted: !currentStatus }).eq('id', toggleId);
-        if (error) { showAlert('Could not update status.', 'error'); } else { loadBookings(); }
-    }
+const target = e.target.closest('button');
+if (error) { showAlert('Could not update status.', 'error'); } else { loadContacts(); }
+}
+if (target.classList.contains('toggle-contacted-btn')) {
+    const toggleId = target.dataset.id;
+    const currentStatus = target.dataset.isContacted === 'true';
+    const { error } = await supabase.from('bookings').update({ is_contacted: !currentStatus }).eq('id', toggleId);
+    if (error) { showAlert('Could not update status.', 'error'); } else { loadBookings(); }
+}
 });
 
 // --- GENERALIZED DELETE FUNCTION ---
@@ -516,7 +469,7 @@ async function loadEvents() {
         .from('events')
         .select('*')
         .order('event_date', { ascending: false });
-    
+
     if (error) {
         console.error('Error fetching events:', error);
         contentArea.innerHTML = 'Error loading data.';
@@ -524,7 +477,7 @@ async function loadEvents() {
     }
 
     contentArea.innerHTML = `<h1>Manage Events</h1><button id="add-event-btn" class="btn btn-primary">Add New Event</button><hr>`;
-    
+
     if (data.length === 0) {
         contentArea.innerHTML += '<p>No events found. Click "Add New" to start.</p>';
         return;
@@ -557,7 +510,434 @@ async function loadEvents() {
             </div>`;
         contentArea.insertAdjacentHTML('beforeend', eventCard);
     });
-}// --- SESSION CHECK ---
+}
+function showAddEventForm() {
+    contentArea.innerHTML = `
+        <h1>Add New Event</h1>
+        <form class="item-form" id="event-form">
+            <div class="form-group">
+                <label for="event_title">Event Title</label>
+                <input type="text" id="event_title" required>
+            </div>
+            <div class="form-group">
+                <label for="event_description">Description</label>
+                <textarea id="event_description" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="event_date">Event Date</label>
+                <input type="date" id="event_date" required>
+            </div>
+            <div class="form-group">
+                <label for="event_time">Event Time</label>
+                <input type="time" id="event_time" required>
+            </div>
+            <div class="form-group">
+                <label for="event_location">Location</label>
+                <input type="text" id="event_location" required>
+            </div>
+            <div class="form-group">
+                <label for="event_type">Event Type</label>
+                <select id="event_type">
+                    <option value="challenge">Challenge</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="class">Class</option>
+                    <option value="special">Special Event</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="event_status">Status</label>
+                <select id="event_status">
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="max_participants">Max Participants (optional)</label>
+                <input type="number" id="max_participants" min="1">
+            </div>
+            <div class="form-group">
+                <label for="event_poster">Event Poster</label>
+                <input type="file" id="event_poster" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Event</button>
+        </form>`;
+
+    document.getElementById('event-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const posterFile = form.querySelector('#event_poster').files[0];
+
+        if (!posterFile) {
+            return showAlert('Event poster is required.', 'error');
+        }
+
+        // Upload poster
+        const filePath = `event-poster-${Date.now()}-${posterFile.name}`;
+        const { error: uploadError } = await supabase.storage
+            .from('event-posters')
+            .upload(filePath, posterFile);
+
+        if (uploadError) {
+            showAlert('Failed to upload poster.', 'error');
+            console.error(uploadError);
+            return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('event-posters')
+            .getPublicUrl(filePath);
+
+        // Insert event
+        const { error: insertError } = await supabase.from('events').insert([{
+            title: form.querySelector('#event_title').value,
+            description: form.querySelector('#event_description').value,
+            event_date: form.querySelector('#event_date').value,
+            event_time: form.querySelector('#event_time').value,
+            location: form.querySelector('#event_location').value,
+            event_type: form.querySelector('#event_type').value,
+            status: form.querySelector('#event_status').value,
+            max_participants: form.querySelector('#max_participants').value || null,
+            poster_url: publicUrl,
+        }]);
+
+        if (insertError) {
+            showAlert('Failed to add event.', 'error');
+            console.error(insertError);
+        } else {
+            showAlert('Event added successfully!', 'success');
+            loadEvents();
+        }
+    });
+}
+
+async function showEditEventForm(id) {
+    const { data, error } = await supabase.from('events').select('*').eq('id', id).single();
+
+    if (error) {
+        showAlert('Could not load event data.', 'error');
+        loadEvents();
+        return;
+    }
+
+    contentArea.innerHTML = `
+        <h1>Edit Event</h1>
+        <form class="item-form" id="event-edit-form">
+            <div class="form-group">
+                <label for="event_title">Event Title</label>
+                <input type="text" id="event_title" value="${data.title}" required>
+            </div>
+            <div class="form-group">
+                <label for="event_description">Description</label>
+                <textarea id="event_description" rows="4">${data.description || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="event_date">Event Date</label>
+                <input type="date" id="event_date" value="${data.event_date}" required>
+            </div>
+            <div class="form-group">
+                <label for="event_time">Event Time</label>
+                <input type="time" id="event_time" value="${data.event_time}" required>
+            </div>
+            <div class="form-group">
+                <label for="event_location">Location</label>
+                <input type="text" id="event_location" value="${data.location}" required>
+            </div>
+            <div class="form-group">
+                <label for="event_type">Event Type</label>
+                <select id="event_type">
+                    <option value="challenge" ${data.event_type === 'challenge' ? 'selected' : ''}>Challenge</option>
+                    <option value="workshop" ${data.event_type === 'workshop' ? 'selected' : ''}>Workshop</option>
+                    <option value="class" ${data.event_type === 'class' ? 'selected' : ''}>Class</option>
+                    <option value="special" ${data.event_type === 'special' ? 'selected' : ''}>Special Event</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="event_status">Status</label>
+                <select id="event_status">
+                    <option value="upcoming" ${data.status === 'upcoming' ? 'selected' : ''}>Upcoming</option>
+                    <option value="past" ${data.status === 'past' ? 'selected' : ''}>Past</option>
+                    <option value="cancelled" ${data.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="max_participants">Max Participants</label>
+                <input type="number" id="max_participants" value="${data.max_participants || ''}" min="1">
+            </div>
+            <div class="form-group">
+                <label>Current Poster</label><br>
+                <img src="${data.poster_url}" style="width:200px; height:200px; object-fit:cover; border-radius:8px;">
+            </div>
+            <div class="form-group">
+                <label for="event_poster">Upload New Poster (optional)</label>
+                <input type="file" id="event_poster" accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Event</button>
+        </form>`;
+
+    document.getElementById('event-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        let posterUrl = data.poster_url;
+
+        const posterFile = form.querySelector('#event_poster').files[0];
+        if (posterFile) {
+            const filePath = `event-poster-${Date.now()}-${posterFile.name}`;
+            const { error: uploadError } = await supabase.storage
+                .from('event-posters')
+                .upload(filePath, posterFile);
+
+            if (uploadError) {
+                showAlert('Failed to upload new poster.', 'error');
+                return;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('event-posters')
+                .getPublicUrl(filePath);
+            posterUrl = publicUrl;
+        }
+
+        const { error: updateError } = await supabase.from('events').update({
+            title: form.querySelector('#event_title').value,
+            description: form.querySelector('#event_description').value,
+            event_date: form.querySelector('#event_date').value,
+            event_time: form.querySelector('#event_time').value,
+            location: form.querySelector('#event_location').value,
+            event_type: form.querySelector('#event_type').value,
+            status: form.querySelector('#event_status').value,
+            max_participants: form.querySelector('#max_participants').value || null,
+            poster_url: posterUrl,
+        }).eq('id', id);
+
+        if (updateError) {
+            showAlert('Failed to update event.', 'error');
+        } else {
+            showAlert('Event updated successfully!', 'success');
+            loadEvents();
+        }
+    });
+}
+
+// --- EVENT BOOKINGS MANAGEMENT ---
+
+async function loadEventBookings() {
+    contentArea.innerHTML = '<h1>Loading event bookings...</h1>';
+
+    const { data, error } = await supabase
+        .from('event_bookings')
+        .select(`
+            *,
+            events (
+                title,
+                event_date,
+                event_time
+            )
+        `)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching event bookings:', error);
+        contentArea.innerHTML = 'Error loading data.';
+        return;
+    }
+
+    contentArea.innerHTML = `<h1>Event Bookings</h1><button id="add-event-booking-btn" class="btn btn-primary">Add Manual Booking</button><hr>`;
+
+    if (data.length === 0) {
+        contentArea.innerHTML += '<p>No event bookings yet.</p>';
+        return;
+    }
+
+    data.forEach(booking => {
+        const eventDate = booking.events ? new Date(booking.events.event_date).toLocaleDateString() : 'N/A';
+        const bookingCard = `
+            <div class="item-card event-booking-card ${!booking.is_contacted ? 'unread' : ''}" data-id="${booking.id}">
+                <div class="content">
+                    <h3>${booking.full_name} - ${booking.events?.title || 'Event Deleted'}</h3>
+                    <div class="meta-info">
+                        <strong>Event:</strong> ${booking.events?.title || 'N/A'} (${eventDate})<br>
+                        <strong>Contact:</strong> ${booking.email} | ${booking.phone}<br>
+                        <strong>Participants:</strong> ${booking.number_of_participants}<br>
+                        <strong>Registered:</strong> ${new Date(booking.created_at).toLocaleString()}
+                    </div>
+                    ${booking.message ? `<div class="message-body">${booking.message}</div>` : ''}
+                </div>
+                <div class="actions">
+                    <button class="btn edit-booking-btn"><i class="fa-solid fa-pencil"></i></button>
+                    <button class="btn toggle-contacted-btn" data-id="${booking.id}" data-is-contacted="${booking.is_contacted}">
+                        Mark as ${booking.is_contacted ? 'Pending' : 'Contacted'}
+                    </button>
+                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`;
+        contentArea.insertAdjacentHTML('beforeend', bookingCard);
+    });
+
+    // Add toggle contacted handlers
+    document.querySelectorAll('.toggle-contacted-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.dataset.id;
+            const isContacted = e.target.dataset.isContacted === 'true';
+            const { error } = await supabase
+                .from('event_bookings')
+                .update({ is_contacted: !isContacted })
+                .eq('id', id);
+            if (error) {
+                showAlert('Could not update status.', 'error');
+            } else {
+                loadEventBookings();
+            }
+        });
+    });
+
+    // Add edit booking handlers
+    document.querySelectorAll('.edit-booking-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.target.closest('.event-booking-card').dataset.id;
+            showEditEventBookingForm(id);
+        });
+    });
+}
+
+async function showAddEventBookingForm() {
+    // Fetch events for dropdown
+    const { data: events } = await supabase.from('events').select('id, title, event_date').order('event_date');
+
+    const eventOptions = events.map(e =>
+        `<option value="${e.id}">${e.title} (${new Date(e.event_date).toLocaleDateString()})</option>`
+    ).join('');
+
+    contentArea.innerHTML = `
+        <h1>Add Manual Event Booking</h1>
+        <form class="item-form" id="event-booking-form">
+            <div class="form-group">
+                <label for="booking_event">Select Event</label>
+                <select id="booking_event" required>
+                    <option value="">Choose an event...</option>
+                    ${eventOptions}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="booking_name">Full Name</label>
+                <input type="text" id="booking_name" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_email">Email</label>
+                <input type="email" id="booking_email" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_phone">Phone</label>
+                <input type="tel" id="booking_phone" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_participants">Number of Participants</label>
+                <input type="number" id="booking_participants" min="1" value="1" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_message">Message/Notes</label>
+                <textarea id="booking_message" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Booking</button>
+        </form>`;
+
+    document.getElementById('event-booking-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+
+        const { error } = await supabase.from('event_bookings').insert([{
+            event_id: form.querySelector('#booking_event').value,
+            full_name: form.querySelector('#booking_name').value,
+            email: form.querySelector('#booking_email').value,
+            phone: form.querySelector('#booking_phone').value,
+            number_of_participants: parseInt(form.querySelector('#booking_participants').value),
+            message: form.querySelector('#booking_message').value,
+        }]);
+
+        if (error) {
+            showAlert('Failed to add booking.', 'error');
+            console.error(error);
+        } else {
+            showAlert('Booking added successfully!', 'success');
+            loadEventBookings();
+        }
+    });
+}
+
+async function showEditEventBookingForm(id) {
+    const { data, error } = await supabase
+        .from('event_bookings')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        showAlert('Could not load booking data.', 'error');
+        loadEventBookings();
+        return;
+    }
+
+    // Fetch events for dropdown
+    const { data: events } = await supabase.from('events').select('id, title, event_date').order('event_date');
+
+    const eventOptions = events.map(e =>
+        `<option value="${e.id}" ${e.id === data.event_id ? 'selected' : ''}>${e.title} (${new Date(e.event_date).toLocaleDateString()})</option>`
+    ).join('');
+
+    contentArea.innerHTML = `
+        <h1>Edit Event Booking</h1>
+        <form class="item-form" id="event-booking-edit-form">
+            <div class="form-group">
+                <label for="booking_event">Event</label>
+                <select id="booking_event" required>
+                    ${eventOptions}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="booking_name">Full Name</label>
+                <input type="text" id="booking_name" value="${data.full_name}" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_email">Email</label>
+                <input type="email" id="booking_email" value="${data.email}" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_phone">Phone</label>
+                <input type="tel" id="booking_phone" value="${data.phone}" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_participants">Number of Participants</label>
+                <input type="number" id="booking_participants" value="${data.number_of_participants}" min="1" required>
+            </div>
+            <div class="form-group">
+                <label for="booking_message">Message/Notes</label>
+                <textarea id="booking_message" rows="3">${data.message || ''}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Booking</button>
+        </form>`;
+
+    document.getElementById('event-booking-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+
+        const { error: updateError } = await supabase.from('event_bookings').update({
+            event_id: form.querySelector('#booking_event').value,
+            full_name: form.querySelector('#booking_name').value,
+            email: form.querySelector('#booking_email').value,
+            phone: form.querySelector('#booking_phone').value,
+            number_of_participants: parseInt(form.querySelector('#booking_participants').value),
+            message: form.querySelector('#booking_message').value,
+        }).eq('id', id);
+
+        if (updateError) {
+            showAlert('Failed to update booking.', 'error');
+        } else {
+            showAlert('Booking updated successfully!', 'success');
+            loadEventBookings();
+        }
+    });
+}
+// --- SESSION CHECK ---
 async function checkSession() {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
