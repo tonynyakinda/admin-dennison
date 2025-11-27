@@ -1,0 +1,111 @@
+//=======================================================================================
+// ADMIN PANEL - ALL JAVASCRIPT MERGED
+// This file contains all JavaScript code from the admin panel merged into one file
+//=======================================================================================
+
+//=======================================================================================
+// FILE 1: supabaseClient.js
+//=======================================================================================
+
+// supabaseClient.js
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Your actual Supabase URL and anon key
+const supabaseUrl = 'https://wsssggnrfxdldeoahvso.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indzc3NnZ25yZnhkbGRlb2FodnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4MzkyMDMsImV4cCI6MjA3NzQxNTIwM30.N7UvKcH0VZKFezrVKOBPWR6vrOtmuyZR1e3sGxZtGoQ';
+
+// Create and export the Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+
+//=======================================================================================
+// FILE 2: ui.js
+//=======================================================================================
+
+// admin/ui.js (NEW FILE)
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- CUSTOM ALERT (TOAST) LOGIC ---
+    const customAlert = document.getElementById('custom-alert');
+    let alertTimeout;
+
+    window.showAlert = function (message, type = 'info', duration = 5000) {
+        if (!customAlert) {
+            console.error("Custom alert element not found in the DOM.");
+            return;
+        }
+        const alertMessage = customAlert.querySelector('.alert-message');
+        clearTimeout(alertTimeout);
+        alertMessage.textContent = message;
+        customAlert.className = 'custom-alert';
+        customAlert.classList.add(`alert-${type}`);
+        customAlert.classList.add('active');
+        alertTimeout = setTimeout(() => {
+            customAlert.classList.remove('active');
+        }, duration);
+    };
+
+    if (customAlert) {
+        const closeButton = customAlert.querySelector('.close-alert');
+        closeButton.addEventListener('click', () => {
+            clearTimeout(alertTimeout);
+            customAlert.classList.remove('active');
+        });
+    }
+
+    // --- CUSTOM CONFIRMATION MODAL LOGIC ---
+    const confirmModal = document.getElementById('confirm-modal');
+    if (confirmModal) {
+        const confirmTitleEl = confirmModal.querySelector('.confirm-title');
+        const confirmTextEl = confirmModal.querySelector('.confirm-text');
+        const btnYes = document.getElementById('confirm-btn-yes');
+        const btnNo = document.getElementById('confirm-btn-no');
+
+        window.showConfirm = function (options = {}) {
+            const {
+                title = 'Are you sure?',
+                text = 'This action cannot be undone.',
+                confirmButtonText = 'Delete'
+            } = options;
+
+            confirmTitleEl.textContent = title;
+            confirmTextEl.textContent = text;
+            btnYes.textContent = confirmButtonText;
+
+            confirmModal.classList.add('active');
+
+            return new Promise((resolve) => {
+                const handleYes = () => {
+                    confirmModal.classList.remove('active');
+                    cleanup();
+                    resolve(true);
+                };
+
+                const handleNo = () => {
+                    confirmModal.classList.remove('active');
+                    cleanup();
+                    resolve(false);
+                };
+
+                btnYes.addEventListener('click', handleYes, { once: true });
+                btnNo.addEventListener('click', handleNo, { once: true });
+
+                function cleanup() {
+                    btnYes.removeEventListener('click', handleYes);
+                    btnNo.removeEventListener('click', handleNo);
+                }
+            });
+        };
+    }
+});
+
+
+//=======================================================================================
+// FILE 3: main.js (MAIN APPLICATION LOGIC - 55KB+)
+//=======================================================================================
+// Note: The main.js file is very large (55KB+) and contains all the core admin functionality.
+// It includes all the CRUD operations, event listeners, and business logic for the admin panel.
+// Please refer to the actual main.js file for the complete code.
+// This merged file is primarily for reference - in practice, you should keep using the modular structure.
