@@ -6,8 +6,41 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // =========================================================================
-// === CONFIRM MODAL UTILITY ===
+// === UTILITIES (ALERTS & CONFIRMS) ===
 // =========================================================================
+
+// --- MISSING FUNCTION ADDED HERE ---
+function showAlert(message, type = 'info', duration = 5000) {
+    const customAlert = document.getElementById('custom-alert');
+    if (!customAlert) {
+        // Fallback if the HTML element is missing
+        alert(message);
+        return;
+    }
+
+    const alertMessage = customAlert.querySelector('.alert-message');
+    const closeBtn = customAlert.querySelector('.close-alert');
+
+    // Set message and type
+    alertMessage.textContent = message;
+    customAlert.className = 'custom-alert'; // Reset classes
+    customAlert.classList.add(`alert-${type}`);
+    customAlert.classList.add('active');
+
+    // Handle auto-close
+    if (customAlert.timeoutId) clearTimeout(customAlert.timeoutId);
+    customAlert.timeoutId = setTimeout(() => {
+        customAlert.classList.remove('active');
+    }, duration);
+
+    // Handle close button click
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            clearTimeout(customAlert.timeoutId);
+            customAlert.classList.remove('active');
+        };
+    }
+}
 
 function showConfirm(options = {}) {
     const confirmModal = document.getElementById('confirm-modal');
@@ -80,12 +113,12 @@ const logoutButton = document.getElementById('logout-button');
 const dashboardNav = document.querySelector('.sidebar');
 const contentArea = document.getElementById('content-area');
 
-// --- AUTHENTICATION LOGIC (FIX FOR LOGIN LOOP) ---
+// --- AUTHENTICATION LOGIC ---
 
 // 1. Handle Login Form Submit
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // <--- CRITICAL: Prevents page reload loop
+        e.preventDefault();
 
         const email = emailInput.value;
         const password = passwordInput.value;
@@ -100,7 +133,6 @@ if (loginForm) {
             loginError.textContent = error.message;
         } else {
             loginError.textContent = '';
-            // checkSession() will handle the UI switch automatically
         }
     });
 }
@@ -109,11 +141,10 @@ if (loginForm) {
 if (logoutButton) {
     logoutButton.addEventListener('click', async () => {
         await supabase.auth.signOut();
-        // checkSession() will handle the UI switch automatically
     });
 }
 
-// 3. Listen for Auth State Changes (Best Practice)
+// 3. Listen for Auth State Changes
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN') {
         checkSession();
@@ -126,18 +157,14 @@ supabase.auth.onAuthStateChange((event, session) => {
 // --- NAVIGATION LOGIC ---
 if (dashboardNav) {
     dashboardNav.addEventListener('click', (e) => {
-        // Find the closest button if clicked on icon/text
         const button = e.target.closest('button');
         if (!button) return;
 
-        // Remove active class from all buttons
         dashboardNav.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-        // Add active class to clicked button
         button.classList.add('active');
 
         const target = button.dataset.target;
 
-        // Router Switch
         switch (target) {
             case 'bookings':
                 loadBookings();
@@ -173,14 +200,11 @@ if (dashboardNav) {
 }
 
 // --- MISSING FUNCTION: LOAD BOOKINGS ---
-// This was called in checkSession but undefined, adding placeholder to prevent crash
 async function loadBookings() {
     contentArea.innerHTML = '<h1>Loading Bookings...</h1>';
-    // Assuming a 'bookings' table exists, otherwise this is a placeholder
     const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
 
     if (error) {
-        // If table doesn't exist yet, show friendly message instead of error
         console.warn('Bookings table might not exist yet:', error);
         contentArea.innerHTML = '<h1>Manage Bookings</h1><hr><p>No bookings found or table not setup.</p>';
         return;
@@ -192,7 +216,6 @@ async function loadBookings() {
         return;
     }
 
-    // Render bookings (adjust fields based on your actual table structure)
     data.forEach(item => {
         contentArea.insertAdjacentHTML('beforeend', `
             <div class="item-card booking-card">
@@ -237,7 +260,6 @@ async function loadServices() {
             </div>`);
     });
 
-    // Add event listeners for edit buttons
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const id = e.target.closest('.item-card').dataset.id;
@@ -312,29 +334,29 @@ async function loadTestimonials() {
     }
     contentArea.innerHTML = `<h1>Manage Testimonials</h1><button id="add-testimonial-btn" class="btn btn-primary">Add New Testimonial</button><hr>`;
 
-    // Add Listener for Add Button
-    document.getElementById('add-testimonial-btn').addEventListener('click', showAddTestimonialForm);
-
     if (data.length === 0) {
-        contentArea.innerHTML += '<p>No testimonials found. Click "Add New" to start.</p>';
-        return;
+        contentArea.insertAdjacentHTML('beforeend', '<p>No testimonials found. Click "Add New" to start.</p>');
+    } else {
+        data.forEach(item => {
+            contentArea.insertAdjacentHTML('beforeend', `
+                <div class="item-card testimonial-card" data-id="${item.id}">
+                    <div class="content">
+                        <h3>${item.client_name}</h3>
+                        <p><strong>Program:</strong> ${item.program_type || 'N/A'}</p>
+                        <p><em>"${item.quote}"</em></p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`);
+        });
     }
-    data.forEach(item => {
-        contentArea.insertAdjacentHTML('beforeend', `
-            <div class="item-card testimonial-card" data-id="${item.id}">
-                <div class="content">
-                    <h3>${item.client_name}</h3>
-                    <p><strong>Program:</strong> ${item.program_type || 'N/A'}</p>
-                    <p><em>"${item.quote}"</em></p>
-                </div>
-                <div class="actions">
-                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
-                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            </div>`);
-    });
 
-    // Add Listeners
+    // Attach listener AFTER HTML updates
+    const addBtn = document.getElementById('add-testimonial-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddTestimonialForm);
+
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showEditTestimonialForm(e.target.closest('.item-card').dataset.id));
     });
@@ -483,27 +505,28 @@ async function loadMerchandise() {
     }
     contentArea.innerHTML = `<h1>Manage Merchandise</h1><button id="add-merch-btn" class="btn btn-primary">Add New Product</button><hr>`;
 
-    document.getElementById('add-merch-btn').addEventListener('click', showAddMerchandiseForm);
-
     if (data.length === 0) {
-        contentArea.innerHTML += '<p>No products found. Click "Add New" to start.</p>';
-        return;
+        contentArea.insertAdjacentHTML('beforeend', '<p>No products found. Click "Add New" to start.</p>');
+    } else {
+        data.forEach(item => {
+            contentArea.insertAdjacentHTML('beforeend', `
+                <div class="item-card merch-card" data-id="${item.id}">
+                    <img src="${item.image_url}" alt="${item.name}">
+                    <div class="content">
+                        <h3>${item.name}</h3>
+                        <p><strong>Price:</strong> Ksh${item.price}</p>
+                        <p>${item.description || ''}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`);
+        });
     }
-    data.forEach(item => {
-        contentArea.insertAdjacentHTML('beforeend', `
-            <div class="item-card merch-card" data-id="${item.id}">
-                <img src="${item.image_url}" alt="${item.name}">
-                <div class="content">
-                    <h3>${item.name}</h3>
-                    <p><strong>Price:</strong> Ksh${item.price}</p>
-                    <p>${item.description || ''}</p>
-                </div>
-                <div class="actions">
-                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
-                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            </div>`);
-    });
+
+    const addBtn = document.getElementById('add-merch-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddMerchandiseForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showEditMerchandiseForm(e.target.closest('.item-card').dataset.id));
@@ -615,26 +638,27 @@ async function loadPosts() {
     }
     contentArea.innerHTML = `<h1>Manage Posts</h1><button id="add-post-btn" class="btn btn-primary">Add New Post</button><hr>`;
 
-    document.getElementById('add-post-btn').addEventListener('click', showAddPostForm);
-
     if (data.length === 0) {
-        contentArea.innerHTML += '<p>No posts found. Click "Add New" to start.</p>';
-        return;
+        contentArea.insertAdjacentHTML('beforeend', '<p>No posts found. Click "Add New" to start.</p>');
+    } else {
+        data.forEach(item => {
+            contentArea.insertAdjacentHTML('beforeend', `
+                <div class="item-card post-card" data-id="${item.id}">
+                    <img src="${item.image_url}" alt="${item.title}">
+                    <div class="content">
+                        <h3>${item.title}</h3>
+                        <p><strong>Type:</strong> ${item.post_type}</p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`);
+        });
     }
-    data.forEach(item => {
-        contentArea.insertAdjacentHTML('beforeend', `
-            <div class="item-card post-card" data-id="${item.id}">
-                <img src="${item.image_url}" alt="${item.title}">
-                <div class="content">
-                    <h3>${item.title}</h3>
-                    <p><strong>Type:</strong> ${item.post_type}</p>
-                </div>
-                <div class="actions">
-                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
-                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            </div>`);
-    });
+
+    const addBtn = document.getElementById('add-post-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddPostForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showEditPostForm(e.target.closest('.item-card').dataset.id));
@@ -778,7 +802,9 @@ async function loadSchedule() {
     tableHtml += `</tr></tbody></table>`;
     contentArea.innerHTML = `<h1>Manage Schedule</h1><button id="add-class-btn" class="btn btn-primary">Add New Class</button><hr>${tableHtml}`;
 
-    document.getElementById('add-class-btn').addEventListener('click', showAddScheduleForm);
+    const addBtn = document.getElementById('add-class-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddScheduleForm);
+
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showEditScheduleForm(e.target.closest('.item-card').dataset.id));
     });
@@ -878,40 +904,40 @@ async function loadEvents() {
 
     contentArea.innerHTML = `<h1>Manage Events</h1><button id="add-event-btn" class="btn btn-primary">Add New Event</button><hr>`;
 
-    document.getElementById('add-event-btn').addEventListener('click', showAddEventForm);
-
     if (data.length === 0) {
-        contentArea.innerHTML += '<p>No events found. Click "Add New" to start.</p>';
-        return;
+        contentArea.insertAdjacentHTML('beforeend', '<p>No events found. Click "Add New" to start.</p>');
+    } else {
+        data.forEach(event => {
+            const eventDate = new Date(event.event_date);
+            const formattedDate = eventDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const eventCard = `
+                <div class="item-card event-card" data-id="${event.id}">
+                    <img src="${event.poster_url}" alt="${event.title}" style="width:150px; height:150px; object-fit:cover; border-radius:8px;">
+                    <div class="content">
+                        <h3>${event.title}</h3>
+                        <p><strong>Date:</strong> ${formattedDate} at ${event.event_time}</p>
+                        <p><strong>Location:</strong> ${event.location}</p>
+                        <p><strong>Type:</strong> ${event.event_type || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${event.status || 'upcoming'}</p>
+                        ${event.description ? `<p>${event.description.substring(0, 100)}...</p>` : ''}
+                    </div>
+                    <div class="actions">
+                        <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i> Edit</button>
+                        <button class="btn delete-btn"><i class="fa-solid fa-trash"></i> Delete</button>
+                    </div>
+                </div>`;
+            contentArea.insertAdjacentHTML('beforeend', eventCard);
+        });
     }
 
-    data.forEach(event => {
-        const eventDate = new Date(event.event_date);
-        const formattedDate = eventDate.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        const eventCard = `
-            <div class="item-card event-card" data-id="${event.id}">
-                <img src="${event.poster_url}" alt="${event.title}" style="width:150px; height:150px; object-fit:cover; border-radius:8px;">
-                <div class="content">
-                    <h3>${event.title}</h3>
-                    <p><strong>Date:</strong> ${formattedDate} at ${event.event_time}</p>
-                    <p><strong>Location:</strong> ${event.location}</p>
-                    <p><strong>Type:</strong> ${event.event_type || 'N/A'}</p>
-                    <p><strong>Status:</strong> ${event.status || 'upcoming'}</p>
-                    ${event.description ? `<p>${event.description.substring(0, 100)}...</p>` : ''}
-                </div>
-                <div class="actions">
-                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i> Edit</button>
-                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i> Delete</button>
-                </div>
-            </div>`;
-        contentArea.insertAdjacentHTML('beforeend', eventCard);
-    });
+    const addBtn = document.getElementById('add-event-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddEventForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showEditEventForm(e.target.closest('.item-card').dataset.id));
@@ -1157,37 +1183,37 @@ async function loadEventBookings() {
 
     contentArea.innerHTML = `<h1>Event Bookings</h1><button id="add-event-booking-btn" class="btn btn-primary">Add Manual Booking</button><hr>`;
 
-    document.getElementById('add-event-booking-btn').addEventListener('click', showAddEventBookingForm);
-
     if (data.length === 0) {
-        contentArea.innerHTML += '<p>No event bookings yet.</p>';
-        return;
+        contentArea.insertAdjacentHTML('beforeend', '<p>No event bookings yet.</p>');
+    } else {
+        data.forEach(booking => {
+            const eventDate = booking.events ? new Date(booking.events.event_date).toLocaleDateString() : 'N/A';
+            const bookingCard = `
+                <div class="item-card event-booking-card ${!booking.is_contacted ? 'unread' : ''}" data-id="${booking.id}">
+                    <div class="content">
+                        <h3>${booking.full_name} - ${booking.events?.title || 'Event Deleted'}</h3>
+                        <div class="meta-info">
+                            <strong>Event:</strong> ${booking.events?.title || 'N/A'} (${eventDate})<br>
+                            <strong>Contact:</strong> ${booking.email} | ${booking.phone}<br>
+                            <strong>Participants:</strong> ${booking.number_of_participants}<br>
+                            <strong>Registered:</strong> ${new Date(booking.created_at).toLocaleString()}
+                        </div>
+                        ${booking.message ? `<div class="message-body">${booking.message}</div>` : ''}
+                    </div>
+                    <div class="actions">
+                        <button class="btn edit-booking-btn"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="btn toggle-contacted-btn" data-id="${booking.id}" data-is-contacted="${booking.is_contacted}">
+                            Mark as ${booking.is_contacted ? 'Pending' : 'Contacted'}
+                        </button>
+                        <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+            contentArea.insertAdjacentHTML('beforeend', bookingCard);
+        });
     }
 
-    data.forEach(booking => {
-        const eventDate = booking.events ? new Date(booking.events.event_date).toLocaleDateString() : 'N/A';
-        const bookingCard = `
-            <div class="item-card event-booking-card ${!booking.is_contacted ? 'unread' : ''}" data-id="${booking.id}">
-                <div class="content">
-                    <h3>${booking.full_name} - ${booking.events?.title || 'Event Deleted'}</h3>
-                    <div class="meta-info">
-                        <strong>Event:</strong> ${booking.events?.title || 'N/A'} (${eventDate})<br>
-                        <strong>Contact:</strong> ${booking.email} | ${booking.phone}<br>
-                        <strong>Participants:</strong> ${booking.number_of_participants}<br>
-                        <strong>Registered:</strong> ${new Date(booking.created_at).toLocaleString()}
-                    </div>
-                    ${booking.message ? `<div class="message-body">${booking.message}</div>` : ''}
-                </div>
-                <div class="actions">
-                    <button class="btn edit-booking-btn"><i class="fa-solid fa-pencil"></i></button>
-                    <button class="btn toggle-contacted-btn" data-id="${booking.id}" data-is-contacted="${booking.is_contacted}">
-                        Mark as ${booking.is_contacted ? 'Pending' : 'Contacted'}
-                    </button>
-                    <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            </div>`;
-        contentArea.insertAdjacentHTML('beforeend', bookingCard);
-    });
+    const addBtn = document.getElementById('add-event-booking-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddEventBookingForm);
 
     // Add toggle contacted handlers
     document.querySelectorAll('.toggle-contacted-btn').forEach(btn => {
