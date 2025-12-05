@@ -230,14 +230,14 @@ async function loadBookings() {
 
 // --- SERVICES MANAGEMENT ---
 async function loadServices() {
-    contentArea.innerHTML = '<h1>Loading service pricing...</h1>';
+    contentArea.innerHTML = '<h1>Loading services...</h1>';
     const { data, error } = await supabase.from('services').select('*');
     if (error) {
         console.error('Error fetching services:', error);
         contentArea.innerHTML = 'Error loading data.';
         return;
     }
-    contentArea.innerHTML = `<h1>Manage Service Pricing</h1><hr>`;
+    contentArea.innerHTML = `<h1>Manage Services</h1><hr>`;
     if (data.length === 0) {
         contentArea.innerHTML += '<p>No services found. Please setup the services table in Supabase.</p>';
         return;
@@ -252,10 +252,10 @@ async function loadServices() {
             <div class="item-card service-card" data-id="${item.id}">
                 <div class="content">
                     <h3>${serviceTitles[item.id] || 'Unknown Service'}</h3>
-                    <p>Click "Edit" to manage the pricing for this service.</p>
+                    <p>Click "Edit" to manage the content for this service.</p>
                 </div>
                 <div class="actions">
-                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i> Edit Pricing</button>
+                    <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i> Edit Service</button>
                 </div>
             </div>`);
     });
@@ -271,57 +271,77 @@ async function loadServices() {
 async function showEditServiceForm(id) {
     const { data, error } = await supabase.from('services').select('*').eq('id', id).single();
     if (error) {
-        showAlert('Could not load service pricing.', 'error');
+        showAlert('Could not load service data.', 'error');
         loadServices();
         return;
     }
     const serviceTitles = {
-        'one-on-one': 'One-on-One',
-        'online': 'Online',
-        'nutrition': 'Nutrition'
+        'one-on-one': 'One-on-One Personal Training',
+        'online': 'Online Coaching',
+        'nutrition': 'Nutrition Coaching'
     };
     const title = serviceTitles[id] || 'Service';
-    const pricingTiersHtml = data.pricing.tiers.map((tier, index) => `
-        <div class="form-group pricing-tier-group">
-            <h4>Tier ${index + 1}</h4>
-            <label>Name:</label>
-            <input type="text" class="pricing-name" value="${tier.name}" required>
-            <label>Price:</label>
-            <input type="text" class="pricing-price" value="${tier.price}" required>
-            <label>Note (e.g., "(Ksh75/session)"):</label>
-            <input type="text" class="pricing-note" value="${tier.note || ''}">
-        </div>`).join('<hr style="border-style: dashed; margin: 1rem 0;">');
+
+    // Prepare existing data or defaults
+    const serviceName = data.name || title;
+    const serviceDescription = data.description || '';
+    const whoFor = data.who_for || [];
+    const whatsIncluded = data.whats_included || [];
 
     contentArea.innerHTML = `
-        <h1>Edit Pricing for ${title}</h1>
+        <h1>Edit ${title}</h1>
         <form class="item-form" id="service-edit-form">
-            <h3>Pricing Tiers</h3>
-            <div id="pricing-tiers-container">${pricingTiersHtml}</div>
-            <button type="submit" class="btn btn-primary">Update Pricing</button>
+            <div class="form-group">
+                <label for="service-name">Service Name:</label>
+                <input type="text" id="service-name" value="${serviceName}" required>
+            </div>
+            <div class="form-group">
+                <label for="service-description">Description:</label>
+                <textarea id="service-description" rows="4" required>${serviceDescription}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="service-who-for">Who This Is For (one item per line):</label>
+                <textarea id="service-who-for" rows="5" placeholder="Enter each point on a new line">${whoFor.join('\n')}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="service-whats-included">What's Included (one item per line):</label>
+                <textarea id="service-whats-included" rows="6" placeholder="Enter each point on a new line">${whatsIncluded.join('\n')}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Service</button>
         </form>`;
 
     document.getElementById('service-edit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.target;
-        const tiers = [];
-        form.querySelectorAll('.pricing-tier-group').forEach(container => {
-            tiers.push({
-                name: container.querySelector('.pricing-name').value,
-                price: container.querySelector('.pricing-price').value,
-                note: container.querySelector('.pricing-note').value
-            });
-        });
-        const updatedData = { pricing: { tiers } };
+
+        // Parse textarea inputs into arrays (split by newline, filter empty lines)
+        const whoForArray = form.querySelector('#service-who-for').value
+            .split('\n')
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+        const whatsIncludedArray = form.querySelector('#service-whats-included').value
+            .split('\n')
+            .map(item => item.trim())
+            .filter(item => item.length > 0);
+
+        const updatedData = {
+            name: form.querySelector('#service-name').value,
+            description: form.querySelector('#service-description').value,
+            who_for: whoForArray,
+            whats_included: whatsIncludedArray
+        };
+
         const { error: updateError } = await supabase.from('services').update(updatedData).eq('id', id);
         if (updateError) {
-            showAlert('Failed to update pricing.', 'error');
+            showAlert('Failed to update service.', 'error');
             console.error(updateError);
         } else {
-            showAlert('Pricing updated successfully!', 'success');
+            showAlert('Service updated successfully!', 'success');
             loadServices();
         }
     });
 }
+
 
 // --- TESTIMONIALS MANAGEMENT ---
 async function loadTestimonials() {
