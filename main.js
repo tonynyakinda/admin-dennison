@@ -1,9 +1,15 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 // --- SUPABASE CONFIGURATION ---
 const supabaseUrl = 'https://wsssggnrfxdldeoahvso.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indzc3NnZ25yZnhkbGRlb2FodnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4MzkyMDMsImV4cCI6MjA3NzQxNTIwM30.N7UvKcH0VZKFezrVKOBPWR6vrOtmuyZR1e3sGxZtGoQ';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+    }
+});
 
 // =========================================================================
 // === UTILITIES (ALERTS & CONFIRMS) ===
