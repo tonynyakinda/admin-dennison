@@ -199,6 +199,9 @@ if (dashboardNav) {
             case 'event-bookings':
                 loadEventBookings();
                 break;
+            case 'library':
+                loadTutorials();
+                break;
             default:
                 contentArea.innerHTML = '<h1>Welcome</h1><p>Select an option from the menu.</p>';
         }
@@ -1411,6 +1414,243 @@ async function showEditEventBookingForm(id) {
         } else {
             showAlert('Booking updated successfully!', 'success');
             loadEventBookings();
+        }
+    });
+}
+
+// --- LIBRARY (TUTORIALS) MANAGEMENT ---
+async function loadTutorials() {
+    contentArea.innerHTML = '<h1>Loading tutorials...</h1>';
+    const { data, error } = await supabase.from('tutorials').select('*').order('display_order', { ascending: true });
+    if (error) {
+        console.error('Error fetching tutorials:', error);
+        contentArea.innerHTML = '<h1>Manage Library</h1><hr><p>Error loading tutorials. Make sure the "tutorials" table exists in Supabase.</p>';
+        return;
+    }
+    contentArea.innerHTML = `<h1>Manage Library</h1><button id="add-tutorial-btn" class="btn btn-primary">Add New Tutorial</button><hr>`;
+
+    if (!data || data.length === 0) {
+        contentArea.insertAdjacentHTML('beforeend', '<p>No tutorials found. Click "Add New Tutorial" to start.</p>');
+    } else {
+        data.forEach(item => {
+            const difficultyClass = item.difficulty || 'beginner';
+            contentArea.insertAdjacentHTML('beforeend', `
+                <div class="item-card tutorial-card" data-id="${item.id}">
+                    <div class="content">
+                        <h3>${item.title}</h3>
+                        <p>${item.description || ''}</p>
+                        <p>
+                            <span class="badge badge-${difficultyClass}">${item.difficulty || 'N/A'}</span>
+                            <span class="badge badge-category">${item.category || 'N/A'}</span>
+                            <span class="badge badge-duration"><i class="fa-solid fa-clock"></i> ${item.duration || 'N/A'}</span>
+                        </p>
+                    </div>
+                    <div class="actions">
+                        <button class="btn edit-btn"><i class="fa-solid fa-pencil"></i></button>
+                        <button class="btn delete-btn"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`);
+        });
+    }
+
+    // Attach event listeners
+    const addBtn = document.getElementById('add-tutorial-btn');
+    if (addBtn) addBtn.addEventListener('click', showAddTutorialForm);
+
+    contentArea.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => showEditTutorialForm(e.target.closest('.item-card').dataset.id));
+    });
+    contentArea.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.closest('.item-card').dataset.id;
+            const confirmed = await showConfirm({ title: 'Delete Tutorial?', text: 'This will permanently remove this tutorial from the library.' });
+            if (confirmed) {
+                const { error: deleteError } = await supabase.from('tutorials').delete().eq('id', id);
+                if (deleteError) {
+                    showAlert('Failed to delete tutorial.', 'error');
+                } else {
+                    showAlert('Tutorial deleted successfully!', 'success');
+                    loadTutorials();
+                }
+            }
+        });
+    });
+}
+
+function showAddTutorialForm() {
+    contentArea.innerHTML = `<h1>Add New Tutorial</h1><form class="item-form" id="tutorial-form"></form>`;
+    document.getElementById('tutorial-form').innerHTML = `
+        <div class="form-group">
+            <label for="title">Tutorial Title</label>
+            <input type="text" id="title" placeholder="e.g., Proper Squat Form & Technique" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" rows="3" placeholder="Brief description of what viewers will learn"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+                <option value="upper-body">Upper Body</option>
+                <option value="lower-body">Lower Body</option>
+                <option value="core">Core</option>
+                <option value="cardio">Cardio</option>
+                <option value="full-body">Full Body</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="difficulty">Difficulty Level</label>
+            <select id="difficulty" required>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="duration">Duration (e.g., 8:45)</label>
+            <input type="text" id="duration" placeholder="8:45" required>
+        </div>
+        <div class="form-group">
+            <label for="video_url">YouTube Video URL</label>
+            <input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+            <label for="thumbnail">Thumbnail Image (optional)</label>
+            <input type="file" id="thumbnail" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="display_order">Display Order (lower = shown first)</label>
+            <input type="number" id="display_order" value="0">
+        </div>
+        <button type="submit" class="btn btn-primary">Save Tutorial</button>`;
+
+    document.getElementById('tutorial-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+
+        let thumbnailUrl = null;
+        const thumbnailFile = form.querySelector('#thumbnail').files[0];
+        if (thumbnailFile) {
+            const filePath = `tutorial-${Date.now()}-${thumbnailFile.name}`;
+            const { error: uploadError } = await supabase.storage.from('tutorial-images').upload(filePath, thumbnailFile);
+            if (uploadError) {
+                console.warn('Thumbnail upload failed, continuing without thumbnail:', uploadError);
+            } else {
+                const { data: { publicUrl } } = supabase.storage.from('tutorial-images').getPublicUrl(filePath);
+                thumbnailUrl = publicUrl;
+            }
+        }
+
+        const { error: insertError } = await supabase.from('tutorials').insert([{
+            title: form.querySelector('#title').value,
+            description: form.querySelector('#description').value,
+            category: form.querySelector('#category').value,
+            difficulty: form.querySelector('#difficulty').value,
+            duration: form.querySelector('#duration').value,
+            video_url: form.querySelector('#video_url').value,
+            thumbnail_url: thumbnailUrl,
+            display_order: parseInt(form.querySelector('#display_order').value) || 0
+        }]);
+
+        if (insertError) {
+            showAlert('Failed to add tutorial.', 'error');
+            console.error(insertError);
+        } else {
+            showAlert('Tutorial added successfully!', 'success');
+            loadTutorials();
+        }
+    });
+}
+
+async function showEditTutorialForm(id) {
+    const { data, error } = await supabase.from('tutorials').select('*').eq('id', id).single();
+    if (error) {
+        showAlert('Could not load tutorial data.', 'error');
+        loadTutorials();
+        return;
+    }
+
+    contentArea.innerHTML = `<h1>Edit Tutorial</h1><form class="item-form" id="tutorial-edit-form"></form>`;
+    document.getElementById('tutorial-edit-form').innerHTML = `
+        <div class="form-group">
+            <label for="title">Tutorial Title</label>
+            <input type="text" id="title" value="${data.title || ''}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" rows="3">${data.description || ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+                <option value="upper-body" ${data.category === 'upper-body' ? 'selected' : ''}>Upper Body</option>
+                <option value="lower-body" ${data.category === 'lower-body' ? 'selected' : ''}>Lower Body</option>
+                <option value="core" ${data.category === 'core' ? 'selected' : ''}>Core</option>
+                <option value="cardio" ${data.category === 'cardio' ? 'selected' : ''}>Cardio</option>
+                <option value="full-body" ${data.category === 'full-body' ? 'selected' : ''}>Full Body</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="difficulty">Difficulty Level</label>
+            <select id="difficulty" required>
+                <option value="beginner" ${data.difficulty === 'beginner' ? 'selected' : ''}>Beginner</option>
+                <option value="intermediate" ${data.difficulty === 'intermediate' ? 'selected' : ''}>Intermediate</option>
+                <option value="advanced" ${data.difficulty === 'advanced' ? 'selected' : ''}>Advanced</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="duration">Duration (e.g., 8:45)</label>
+            <input type="text" id="duration" value="${data.duration || ''}" required>
+        </div>
+        <div class="form-group">
+            <label for="video_url">YouTube Video URL</label>
+            <input type="url" id="video_url" value="${data.video_url || ''}">
+        </div>
+        ${data.thumbnail_url ? `<div class="form-group"><label>Current Thumbnail</label><br><img src="${data.thumbnail_url}" style="width:150px; height:100px; object-fit:cover;"></div>` : ''}
+        <div class="form-group">
+            <label for="thumbnail">Upload New Thumbnail (optional)</label>
+            <input type="file" id="thumbnail" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="display_order">Display Order (lower = shown first)</label>
+            <input type="number" id="display_order" value="${data.display_order || 0}">
+        </div>
+        <button type="submit" class="btn btn-primary">Update Tutorial</button>`;
+
+    document.getElementById('tutorial-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+
+        let thumbnailUrl = data.thumbnail_url;
+        const thumbnailFile = form.querySelector('#thumbnail').files[0];
+        if (thumbnailFile) {
+            const filePath = `tutorial-${Date.now()}-${thumbnailFile.name}`;
+            const { error: uploadError } = await supabase.storage.from('tutorial-images').upload(filePath, thumbnailFile);
+            if (uploadError) {
+                console.warn('Thumbnail upload failed, keeping existing thumbnail:', uploadError);
+            } else {
+                const { data: { publicUrl } } = supabase.storage.from('tutorial-images').getPublicUrl(filePath);
+                thumbnailUrl = publicUrl;
+            }
+        }
+
+        const { error: updateError } = await supabase.from('tutorials').update({
+            title: form.querySelector('#title').value,
+            description: form.querySelector('#description').value,
+            category: form.querySelector('#category').value,
+            difficulty: form.querySelector('#difficulty').value,
+            duration: form.querySelector('#duration').value,
+            video_url: form.querySelector('#video_url').value,
+            thumbnail_url: thumbnailUrl,
+            display_order: parseInt(form.querySelector('#display_order').value) || 0
+        }).eq('id', id);
+
+        if (updateError) {
+            showAlert('Failed to update tutorial.', 'error');
+            console.error(updateError);
+        } else {
+            showAlert('Tutorial updated successfully!', 'success');
+            loadTutorials();
         }
     });
 }
