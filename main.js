@@ -15,6 +15,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // === UTILITIES (ALERTS & CONFIRMS) ===
 // =========================================================================
 
+function validateYouTubeUrl(url) {
+    if (!url) return true; // Optional field
+    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+    return pattern.test(url);
+}
+
 // --- MISSING FUNCTION ADDED HERE ---
 function showAlert(message, type = 'info', duration = 5000) {
     const customAlert = document.getElementById('custom-alert');
@@ -1528,6 +1534,11 @@ function showAddTutorialForm() {
         e.preventDefault();
         const form = e.target;
 
+        const videoUrl = form.querySelector('#video_url').value;
+        if (!validateYouTubeUrl(videoUrl)) {
+            return showAlert('Please enter a valid YouTube URL.', 'error');
+        }
+
         let thumbnailUrl = null;
         const thumbnailFile = form.querySelector('#thumbnail').files[0];
         if (thumbnailFile) {
@@ -1547,7 +1558,7 @@ function showAddTutorialForm() {
             category: form.querySelector('#category').value,
             difficulty: form.querySelector('#difficulty').value,
             duration: form.querySelector('#duration').value,
-            video_url: form.querySelector('#video_url').value,
+            video_url: videoUrl,
             thumbnail_url: thumbnailUrl,
             display_order: parseInt(form.querySelector('#display_order').value) || 0
         }]);
@@ -1621,6 +1632,11 @@ async function showEditTutorialForm(id) {
         e.preventDefault();
         const form = e.target;
 
+        const videoUrl = form.querySelector('#video_url').value;
+        if (!validateYouTubeUrl(videoUrl)) {
+            return showAlert('Please enter a valid YouTube URL.', 'error');
+        }
+
         let thumbnailUrl = data.thumbnail_url;
         const thumbnailFile = form.querySelector('#thumbnail').files[0];
         if (thumbnailFile) {
@@ -1640,7 +1656,7 @@ async function showEditTutorialForm(id) {
             category: form.querySelector('#category').value,
             difficulty: form.querySelector('#difficulty').value,
             duration: form.querySelector('#duration').value,
-            video_url: form.querySelector('#video_url').value,
+            video_url: videoUrl,
             thumbnail_url: thumbnailUrl,
             display_order: parseInt(form.querySelector('#display_order').value) || 0
         }).eq('id', id);
