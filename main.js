@@ -182,7 +182,7 @@ if (dashboardNav) {
                 loadBookings();
                 break;
             case 'contacts':
-                contentArea.innerHTML = '<h1>Contacts</h1><p>Contact management coming soon.</p>';
+                loadContacts();
                 break;
             case 'services':
                 loadServices();
@@ -242,6 +242,65 @@ async function loadBookings() {
     });
 }
 
+// --- CONTACTS MANAGEMENT ---
+async function loadContacts() {
+    contentArea.innerHTML = '<h1>Loading contacts...</h1>';
+    const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching contacts:', error);
+        contentArea.innerHTML = '<h1>View Contacts</h1><p class="error">Error loading contacts. Check console for details.</p>';
+        return;
+    }
+
+    contentArea.innerHTML = `<h1>Contact Form Submissions</h1><hr>`;
+
+    if (!data || data.length === 0) {
+        contentArea.insertAdjacentHTML('beforeend', '<p>No contact form submissions yet.</p>');
+        return;
+    }
+
+    data.forEach(contact => {
+        const date = new Date(contact.created_at).toLocaleString();
+        const card = `
+            <div class="item-card contact-card" data-id="${contact.id}">
+                <div class="content" style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h3 style="margin: 0;">${contact.full_name || 'Unknown'}</h3>
+                        <small style="color: #888;">${date}</small>
+                    </div>
+                    <p><strong>Email:</strong> <a href="mailto:${contact.email}">${contact.email}</a></p>
+                    ${contact.phone ? `<p><strong>Phone:</strong> <a href="tel:${contact.phone}">${contact.phone}</a></p>` : ''}
+                    ${contact.subject ? `<p><strong>Subject:</strong> ${contact.subject}</p>` : ''}
+                    <p><strong>Message:</strong></p>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 3px solid var(--primary-orange);">
+                        ${contact.message || 'No message provided.'}
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn delete-btn" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`;
+        contentArea.insertAdjacentHTML('beforeend', card);
+    });
+
+    // Add delete handlers for contacts
+    contentArea.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.closest('.item-card').dataset.id;
+            if (await showConfirm({ title: 'Delete Contact?', text: 'This will permanently remove this contact submission.' })) {
+                const { error: deleteError } = await supabase.from('contacts').delete().eq('id', id);
+                if (deleteError) {
+                    showAlert('Failed to delete contact.', 'error');
+                } else {
+                    showAlert('Contact deleted successfully!', 'success');
+                    loadContacts();
+                }
+            }
+        });
+    });
+}
+
 
 // --- SERVICES MANAGEMENT ---
 async function loadServices() {
@@ -277,7 +336,7 @@ async function loadServices() {
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
+            const id = e.currentTarget.closest('.item-card').dataset.id;
             showEditServiceForm(id);
         });
     });
@@ -393,15 +452,16 @@ async function loadTestimonials() {
     if (addBtn) addBtn.addEventListener('click', showAddTestimonialForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showEditTestimonialForm(e.target.closest('.item-card').dataset.id));
+        btn.addEventListener('click', (e) => showEditTestimonialForm(e.currentTarget.closest('.item-card').dataset.id));
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
+            const id = e.currentTarget.closest('.item-card').dataset.id;
             const confirmed = await showConfirm({ title: 'Delete Testimonial?', text: 'This will permanently remove this testimonial.' });
             if (confirmed) {
-                await supabase.from('testimonials').delete().eq('id', id);
-                loadTestimonials();
+                const { error } = await supabase.from('testimonials').delete().eq('id', id);
+                if (error) showAlert('Failed to delete testimonial.', 'error');
+                else loadTestimonials();
             }
         });
     });
@@ -564,14 +624,15 @@ async function loadMerchandise() {
     if (addBtn) addBtn.addEventListener('click', showAddMerchandiseForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showEditMerchandiseForm(e.target.closest('.item-card').dataset.id));
+        btn.addEventListener('click', (e) => showEditMerchandiseForm(e.currentTarget.closest('.item-card').dataset.id));
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
+            const id = e.currentTarget.closest('.item-card').dataset.id;
             if (await showConfirm({ title: 'Delete Product?' })) {
-                await supabase.from('merchandise').delete().eq('id', id);
-                loadMerchandise();
+                const { error } = await supabase.from('merchandise').delete().eq('id', id);
+                if (error) showAlert('Failed to delete product.', 'error');
+                else loadMerchandise();
             }
         });
     });
@@ -696,14 +757,27 @@ async function loadPosts() {
     if (addBtn) addBtn.addEventListener('click', showAddPostForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showEditPostForm(e.target.closest('.item-card').dataset.id));
+        btn.addEventListener('click', (e) => showEditPostForm(e.currentTarget.closest('.item-card').dataset.id));
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
-            if (await showConfirm({ title: 'Delete Post?' })) {
-                await supabase.from('posts').delete().eq('id', id);
-                loadPosts();
+            e.stopPropagation(); // Prevent event bubbling issues
+            // Use currentTarget (the button) to find the parent card, not e.target (might be the icon)
+            const card = e.currentTarget.closest('.item-card');
+            if (!card) {
+                console.error('Could not find parent item-card for delete button');
+                return;
+            }
+            const id = card.dataset.id;
+            if (await showConfirm({ title: 'Delete Post?', text: 'This action cannot be undone.' })) {
+                const { error } = await supabase.from('posts').delete().eq('id', id);
+                if (error) {
+                    console.error('Error deleting post:', error);
+                    showAlert('Failed to delete post. Check console for details.', 'error');
+                } else {
+                    showAlert('Post deleted successfully!', 'success');
+                    loadPosts();
+                }
             }
         });
     });
@@ -841,14 +915,15 @@ async function loadSchedule() {
     if (addBtn) addBtn.addEventListener('click', showAddScheduleForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showEditScheduleForm(e.target.closest('.item-card').dataset.id));
+        btn.addEventListener('click', (e) => showEditScheduleForm(e.currentTarget.closest('.item-card').dataset.id));
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
+            const id = e.currentTarget.closest('.item-card').dataset.id;
             if (await showConfirm({ title: 'Delete Class?' })) {
-                await supabase.from('schedule').delete().eq('id', id);
-                loadSchedule();
+                const { error } = await supabase.from('schedule').delete().eq('id', id);
+                if (error) showAlert('Failed to delete class.', 'error');
+                else loadSchedule();
             }
         });
     });
@@ -975,14 +1050,15 @@ async function loadEvents() {
     if (addBtn) addBtn.addEventListener('click', showAddEventForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showEditEventForm(e.target.closest('.item-card').dataset.id));
+        btn.addEventListener('click', (e) => showEditEventForm(e.currentTarget.closest('.item-card').dataset.id));
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
+            const id = e.currentTarget.closest('.item-card').dataset.id;
             if (await showConfirm({ title: 'Delete Event?' })) {
-                await supabase.from('events').delete().eq('id', id);
-                loadEvents();
+                const { error } = await supabase.from('events').delete().eq('id', id);
+                if (error) showAlert('Failed to delete event.', 'error');
+                else loadEvents();
             }
         });
     });
@@ -1270,17 +1346,18 @@ async function loadEventBookings() {
     // Add edit booking handlers
     document.querySelectorAll('.edit-booking-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = e.target.closest('.event-booking-card').dataset.id;
+            const id = e.currentTarget.closest('.event-booking-card').dataset.id;
             showEditEventBookingForm(id);
         });
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.event-booking-card').dataset.id;
+            const id = e.currentTarget.closest('.event-booking-card').dataset.id;
             if (await showConfirm({ title: 'Delete Booking?' })) {
-                await supabase.from('event_bookings').delete().eq('id', id);
-                loadEventBookings();
+                const { error } = await supabase.from('event_bookings').delete().eq('id', id);
+                if (error) showAlert('Failed to delete booking.', 'error');
+                else loadEventBookings();
             }
         });
     });
@@ -1464,11 +1541,11 @@ async function loadTutorials() {
     if (addBtn) addBtn.addEventListener('click', showAddTutorialForm);
 
     contentArea.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showEditTutorialForm(e.target.closest('.item-card').dataset.id));
+        btn.addEventListener('click', (e) => showEditTutorialForm(e.currentTarget.closest('.item-card').dataset.id));
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.target.closest('.item-card').dataset.id;
+            const id = e.currentTarget.closest('.item-card').dataset.id;
             const confirmed = await showConfirm({ title: 'Delete Tutorial?', text: 'This will permanently remove this tutorial from the library.' });
             if (confirmed) {
                 const { error: deleteError } = await supabase.from('tutorials').delete().eq('id', id);
