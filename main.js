@@ -758,7 +758,7 @@ async function showEditMerchandiseForm(id) {
 // --- POSTS MANAGEMENT ---
 async function loadPosts() {
     contentArea.innerHTML = '<h1>Loading posts...</h1>';
-    const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('posts').select('id, title, post_type, image_url, created_at').order('created_at', { ascending: false });
     if (error) {
         console.error('Error fetching posts:', error);
         contentArea.innerHTML = 'Error loading data.';
