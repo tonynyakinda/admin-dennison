@@ -214,7 +214,7 @@ if (dashboardNav) {
     });
 }
 
-// --- MISSING FUNCTION: LOAD BOOKINGS ---
+// --- BOOKINGS MANAGEMENT ---
 async function loadBookings() {
     contentArea.innerHTML = '<h1>Loading Bookings...</h1>';
     const { data, error } = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
@@ -231,14 +231,46 @@ async function loadBookings() {
         return;
     }
 
-    data.forEach(item => {
-        contentArea.insertAdjacentHTML('beforeend', `
-            <div class="item-card booking-card">
-                <div class="content">
-                    <h3>Booking #${item.id}</h3>
-                    <p>Details: ${JSON.stringify(item)}</p>
+    data.forEach(booking => {
+        const date = new Date(booking.created_at).toLocaleString();
+        const card = `
+            <div class="item-card booking-card" data-id="${booking.id}">
+                <div class="content" style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <h3 style="margin: 0;">${booking.full_name || 'Unknown Client'}</h3>
+                        <small style="color: #888;">${date}</small>
+                    </div>
+                    <p><strong>Service:</strong> <span style="text-transform: capitalize;">${(booking.service || 'N/A').replace(/-/g, ' ')}</span></p>
+                    <p><strong>Email:</strong> <a href="mailto:${booking.email}">${booking.email || 'N/A'}</a></p>
+                    ${booking.phone ? `<p><strong>Phone:</strong> <a href="tel:${booking.phone}">${booking.phone}</a></p>` : ''}
+                    ${booking.message ? `
+                        <p><strong>Message:</strong></p>
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 3px solid var(--primary-orange);">
+                            ${booking.message}
+                        </div>
+                    ` : ''}
                 </div>
-            </div>`);
+                <div class="actions">
+                    <button class="btn delete-btn" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`;
+        contentArea.insertAdjacentHTML('beforeend', card);
+    });
+
+    // Add delete handlers for bookings
+    contentArea.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.currentTarget.closest('.item-card').dataset.id;
+            if (await showConfirm({ title: 'Delete Booking?', text: 'This will permanently remove this booking.' })) {
+                const { error: deleteError } = await supabase.from('bookings').delete().eq('id', id);
+                if (deleteError) {
+                    showAlert('Failed to delete booking.', 'error');
+                } else {
+                    showAlert('Booking deleted successfully!', 'success');
+                    loadBookings();
+                }
+            }
+        });
     });
 }
 
