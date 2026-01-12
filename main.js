@@ -819,7 +819,7 @@ function showAddPostForm() {
     contentArea.innerHTML = `<h1>Add New Post</h1><form class="item-form" id="post-form"></form>`;
     document.getElementById('post-form').innerHTML = `
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" required></div>
-        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog">Blog</option><option value="vlog">Vlog</option></select></div>
+        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog">Blog</option><option value="vlog">Vlog</option><option value="podcast">Podcast</option></select></div>
         <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
         <div class="form-group"><label for="video_url">Video URL (for vlogs, e.g., YouTube)</label><input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..."></div>
         <div class="form-group"><label for="image">Cover Image</label><input type="file" id="image" accept="image/*" required></div>
@@ -869,7 +869,7 @@ async function showEditPostForm(id) {
     contentArea.innerHTML = `<h1>Edit Post</h1><form class="item-form" id="post-edit-form"></form>`;
     document.getElementById('post-edit-form').innerHTML = `
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" value="${data.title}" required></div>
-        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog" ${data.post_type === 'blog' ? 'selected' : ''}>Blog</option><option value="vlog" ${data.post_type === 'vlog' ? 'selected' : ''}>Vlog</option></select></div>
+        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog" ${data.post_type === 'blog' ? 'selected' : ''}>Blog</option><option value="vlog" ${data.post_type === 'vlog' ? 'selected' : ''}>Vlog</option><option value="podcast" ${data.post_type === 'podcast' ? 'selected' : ''}>Podcast</option></select></div>
         <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
         <div class="form-group"><label for="video_url">Video URL (for vlogs)</label><input type="url" id="video_url" value="${data.video_url || ''}"></div>
         <div class="form-group"><label>Current Image</label><br><img src="${data.image_url}" alt="${data.title}" style="width:100px; height:100px; object-fit:cover;"></div>
@@ -964,7 +964,7 @@ async function loadSchedule() {
 function showAddScheduleForm() {
     contentArea.innerHTML = `<h1>Add New Class</h1><form class="item-form" id="schedule-form"></form>`;
     document.getElementById('schedule-form').innerHTML = `
-        <div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" required></div>
+        <div class="form-group"><label for="class_name">Class Name (optional)</label><input type="text" id="class_name"></div>
         <div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="7">Sunday</option></select></div>
         <div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" required></div>
         <div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" required></div>
@@ -997,7 +997,7 @@ async function showEditScheduleForm(id) {
     }
     contentArea.innerHTML = `<h1>Edit Class</h1><form class="item-form" id="schedule-edit-form"></form>`;
     document.getElementById('schedule-edit-form').innerHTML = `
-        <div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" value="${data.class_name}" required></div>
+        <div class="form-group"><label for="class_name">Class Name (optional)</label><input type="text" id="class_name" value="${data.class_name || ''}"></div>
         <div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required></select></div>
         <div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" value="${data.start_time.slice(0, 5)}" required></div>
         <div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" value="${data.end_time.slice(0, 5)}" required></div>
