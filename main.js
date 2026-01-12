@@ -999,8 +999,8 @@ async function showEditScheduleForm(id) {
     document.getElementById('schedule-edit-form').innerHTML = `
         <div class="form-group"><label for="class_name">Class Name</label><input type="text" id="class_name" value="${data.class_name}" required></div>
         <div class="form-group"><label for="day_of_week">Day of Week</label><select id="day_of_week" required></select></div>
-        <div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" value="${data.start_time}" required></div>
-        <div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" value="${data.end_time}" required></div>
+        <div class="form-group"><label for="start_time">Start Time</label><input type="time" id="start_time" value="${data.start_time.slice(0, 5)}" required></div>
+        <div class="form-group"><label for="end_time">End Time</label><input type="time" id="end_time" value="${data.end_time.slice(0, 5)}" required></div>
         <button type="submit" class="btn btn-primary">Update Class</button>`;
 
     const daySelect = document.getElementById('day_of_week');
