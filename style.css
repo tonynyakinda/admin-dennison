@@ -364,6 +364,17 @@ form.item-form {
     width: 100%;
 }
 
+/* Ensure post-card actions are always visible */
+.post-card {
+    flex-wrap: wrap;
+}
+
+.post-card .actions {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 .contact-card .message-body,
 .booking-card .message-body {
     background-color: #f8f9fa;
