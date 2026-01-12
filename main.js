@@ -391,6 +391,7 @@ async function showEditServiceForm(id) {
     // Prepare existing data or defaults
     const serviceName = data.name || title;
     const serviceDescription = data.description || '';
+    const servicePrice = data.price || '';
     const whoFor = data.who_for || [];
     const whatsIncluded = data.whats_included || [];
 
@@ -404,6 +405,10 @@ async function showEditServiceForm(id) {
             <div class="form-group">
                 <label for="service-description">Description:</label>
                 <textarea id="service-description" rows="4" required>${serviceDescription}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="service-price">Pricing (e.g., "Ksh 5,000/month" or "From Ksh 3,000"):</label>
+                <input type="text" id="service-price" value="${servicePrice}" placeholder="Enter pricing info">
             </div>
             <div class="form-group">
                 <label for="service-who-for">Who This Is For (one item per line):</label>
@@ -433,6 +438,7 @@ async function showEditServiceForm(id) {
         const updatedData = {
             name: form.querySelector('#service-name').value,
             description: form.querySelector('#service-description').value,
+            price: form.querySelector('#service-price').value,
             who_for: whoForArray,
             whats_included: whatsIncludedArray
         };
