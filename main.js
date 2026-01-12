@@ -808,10 +808,14 @@ async function loadPosts() {
             }
             const id = card.dataset.id;
             if (await showConfirm({ title: 'Delete Post?', text: 'This action cannot be undone.' })) {
-                const { error } = await supabase.from('posts').delete().eq('id', id);
+                const { data, error } = await supabase.from('posts').delete().eq('id', id).select();
                 if (error) {
                     console.error('Error deleting post:', error);
                     showAlert('Failed to delete post. Check console for details.', 'error');
+                } else if (!data || data.length === 0) {
+                    // RLS policy is blocking the delete - no rows were affected
+                    console.error('Delete blocked: No rows were deleted. Check RLS policies in Supabase.');
+                    showAlert('Delete blocked by permissions. Check Supabase RLS policies for the posts table.', 'error');
                 } else {
                     showAlert('Post deleted successfully!', 'success');
                     loadPosts();
