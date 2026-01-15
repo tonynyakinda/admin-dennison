@@ -494,12 +494,26 @@ async function loadTestimonials() {
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.closest('.item-card').dataset.id;
+            e.stopPropagation(); // Prevent event bubbling issues
+            const card = e.currentTarget.closest('.item-card');
+            if (!card) {
+                console.error('Could not find parent item-card for delete button');
+                return;
+            }
+            const id = card.dataset.id;
             const confirmed = await showConfirm({ title: 'Delete Testimonial?', text: 'This will permanently remove this testimonial.' });
             if (confirmed) {
-                const { error } = await supabase.from('testimonials').delete().eq('id', id);
-                if (error) showAlert('Failed to delete testimonial.', 'error');
-                else loadTestimonials();
+                const { data, error } = await supabase.from('testimonials').delete().eq('id', id).select();
+                if (error) {
+                    console.error('Error deleting testimonial:', error);
+                    showAlert('Failed to delete testimonial. Check console for details.', 'error');
+                } else if (!data || data.length === 0) {
+                    console.error('Delete blocked: No rows were deleted. Check RLS policies in Supabase.');
+                    showAlert('Delete blocked by permissions. Check Supabase RLS policies.', 'error');
+                } else {
+                    showAlert('Testimonial deleted successfully!', 'success');
+                    loadTestimonials();
+                }
             }
         });
     });
@@ -666,11 +680,25 @@ async function loadMerchandise() {
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.closest('.item-card').dataset.id;
-            if (await showConfirm({ title: 'Delete Product?' })) {
-                const { error } = await supabase.from('merchandise').delete().eq('id', id);
-                if (error) showAlert('Failed to delete product.', 'error');
-                else loadMerchandise();
+            e.stopPropagation(); // Prevent event bubbling issues
+            const card = e.currentTarget.closest('.item-card');
+            if (!card) {
+                console.error('Could not find parent item-card for delete button');
+                return;
+            }
+            const id = card.dataset.id;
+            if (await showConfirm({ title: 'Delete Product?', text: 'This action cannot be undone.' })) {
+                const { data, error } = await supabase.from('merchandise').delete().eq('id', id).select();
+                if (error) {
+                    console.error('Error deleting merchandise:', error);
+                    showAlert('Failed to delete product. Check console for details.', 'error');
+                } else if (!data || data.length === 0) {
+                    console.error('Delete blocked: No rows were deleted. Check RLS policies in Supabase.');
+                    showAlert('Delete blocked by permissions. Check Supabase RLS policies.', 'error');
+                } else {
+                    showAlert('Product deleted successfully!', 'success');
+                    loadMerchandise();
+                }
             }
         });
     });
@@ -961,11 +989,26 @@ async function loadSchedule() {
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.closest('.item-card').dataset.id;
-            if (await showConfirm({ title: 'Delete Class?' })) {
-                const { error } = await supabase.from('schedule').delete().eq('id', id);
-                if (error) showAlert('Failed to delete class.', 'error');
-                else loadSchedule();
+            e.stopPropagation(); // Prevent event bubbling issues
+            const card = e.currentTarget.closest('.item-card');
+            if (!card) {
+                console.error('Could not find parent item-card for delete button');
+                return;
+            }
+            const id = card.dataset.id;
+            if (await showConfirm({ title: 'Delete Class?', text: 'This action cannot be undone.' })) {
+                const { data, error } = await supabase.from('schedule').delete().eq('id', id).select();
+                if (error) {
+                    console.error('Error deleting schedule item:', error);
+                    showAlert('Failed to delete class. Check console for details.', 'error');
+                } else if (!data || data.length === 0) {
+                    // RLS policy is blocking the delete - no rows were affected
+                    console.error('Delete blocked: No rows were deleted. Check RLS policies in Supabase.');
+                    showAlert('Delete blocked by permissions. Check Supabase RLS policies for the schedule table.', 'error');
+                } else {
+                    showAlert('Class deleted successfully!', 'success');
+                    loadSchedule();
+                }
             }
         });
     });
@@ -1096,11 +1139,25 @@ async function loadEvents() {
     });
     contentArea.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-            const id = e.currentTarget.closest('.item-card').dataset.id;
-            if (await showConfirm({ title: 'Delete Event?' })) {
-                const { error } = await supabase.from('events').delete().eq('id', id);
-                if (error) showAlert('Failed to delete event.', 'error');
-                else loadEvents();
+            e.stopPropagation(); // Prevent event bubbling issues
+            const card = e.currentTarget.closest('.item-card');
+            if (!card) {
+                console.error('Could not find parent item-card for delete button');
+                return;
+            }
+            const id = card.dataset.id;
+            if (await showConfirm({ title: 'Delete Event?', text: 'This action cannot be undone.' })) {
+                const { data, error } = await supabase.from('events').delete().eq('id', id).select();
+                if (error) {
+                    console.error('Error deleting event:', error);
+                    showAlert('Failed to delete event. Check console for details.', 'error');
+                } else if (!data || data.length === 0) {
+                    console.error('Delete blocked: No rows were deleted. Check RLS policies in Supabase.');
+                    showAlert('Delete blocked by permissions. Check Supabase RLS policies.', 'error');
+                } else {
+                    showAlert('Event deleted successfully!', 'success');
+                    loadEvents();
+                }
             }
         });
     });
