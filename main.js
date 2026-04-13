@@ -104,12 +104,28 @@ function showConfirm(options = {}) {
 // === MAIN APPLICATION LOGIC ===
 // =========================================================================
 
+// --- QUILL FONT SETUP ---
+const Font = Quill.import('formats/font');
+Font.whitelist = [
+    'sans-serif', 'serif', 'monospace', 
+    'roboto', 'open-sans', 'lato', 'montserrat', 'poppins', 'nunito', 'raleway', 'ubuntu', 'quicksand', 'titillium-web', 'fira-sans', 'kanit', 'karla', 'archivo', 'exo-2', 'oswald', 'source-sans-pro', 'noto-sans',
+    'lora', 'playfair', 'merriweather', 'pt-serif', 'arvo', 'crimson-text', 'noto-serif', 'libre-baskerville', 'spectral', 'cormorant-garamond', 'zilla-slab',
+    'inconsolata', 'source-code-pro', 'roboto-mono', 'ubuntu-mono', 'space-mono',
+    'pacifico', 'dancing-script', 'lobster', 'bebas-neue', 'abril-fatface', 'comfortaa', 'caveat', 'shadows-into-light'
+];
+Quill.register(Font, true);
+
 // --- CONFIGURATION ---
 const fullToolbarOptions = [
-    [{ 'header': [1, 2, 3, false] }],
+    [{ 'font': Font.whitelist }, { 'size': [] }],
     ['bold', 'italic', 'underline', 'strike'],
-    ['blockquote', 'code-block'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'script': 'sub' }, { 'script': 'super' }],
+    [{ 'header': [1, 2, 3, false] }],
     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'indent': '-1' }, { 'indent': '+1' }],
+    [{ 'align': [] }],
+    ['blockquote', 'code-block'],
     ['link', 'image', 'video'],
     ['clean']
 ];
@@ -857,13 +873,26 @@ function showAddPostForm() {
     contentArea.innerHTML = `<h1>Add New Post</h1><form class="item-form" id="post-form"></form>`;
     document.getElementById('post-form').innerHTML = `
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" required></div>
-        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog">Blog</option><option value="vlog">Vlog</option><option value="podcast">Podcast</option></select></div>
-        <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
-        <div class="form-group"><label for="video_url">Video URL (for vlogs, e.g., YouTube)</label><input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..."></div>
+        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog">Blog (Text Article)</option><option value="vlog">Vlog (Video Post)</option><option value="podcast">Podcast (Audio Post)</option></select></div>
+        <div class="form-group" id="content-editor-group"><label for="content-editor">Blog Content</label><div id="content-editor" style="background: white;"></div></div>
+        <div class="form-group"><label for="video_url">Video/Audio URL (for vlogs & podcasts)</label><input type="url" id="video_url" placeholder="https://www.youtube.com/watch?v=..."></div>
         <div class="form-group"><label for="image">Cover Image</label><input type="file" id="image" accept="image/*" required></div>
         <button type="submit" class="btn btn-primary">Save Post</button>`;
 
     const quill = new Quill('#content-editor', { theme: 'snow', modules: { toolbar: fullToolbarOptions } });
+
+    // Handle conditional visibility
+    const typeSelect = document.getElementById('post_type');
+    const editorGroup = document.getElementById('content-editor-group');
+    const toggleEditor = () => {
+        if (typeSelect.value === 'blog') {
+            editorGroup.style.display = 'block';
+        } else {
+            editorGroup.style.display = 'none';
+        }
+    };
+    typeSelect.addEventListener('change', toggleEditor);
+    toggleEditor(); // Initialize
 
     document.getElementById('post-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -907,15 +936,25 @@ async function showEditPostForm(id) {
     contentArea.innerHTML = `<h1>Edit Post</h1><form class="item-form" id="post-edit-form"></form>`;
     document.getElementById('post-edit-form').innerHTML = `
         <div class="form-group"><label for="title">Title</label><input type="text" id="title" value="${data.title}" required></div>
-        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog" ${data.post_type === 'blog' ? 'selected' : ''}>Blog</option><option value="vlog" ${data.post_type === 'vlog' ? 'selected' : ''}>Vlog</option><option value="podcast" ${data.post_type === 'podcast' ? 'selected' : ''}>Podcast</option></select></div>
-        <div class="form-group"><label for="content-editor">Content</label><div id="content-editor"></div></div>
-        <div class="form-group"><label for="video_url">Video URL (for vlogs)</label><input type="url" id="video_url" value="${data.video_url || ''}"></div>
-        <div class="form-group"><label>Current Image</label><br><img src="${data.image_url}" alt="${data.title}" style="width:100px; height:100px; object-fit:cover;"></div>
+        <div class="form-group"><label for="post_type">Post Type</label><select id="post_type" required><option value="blog" ${data.post_type === 'blog' ? 'selected' : ''}>Blog (Text Article)</option><option value="vlog" ${data.post_type === 'vlog' ? 'selected' : ''}>Vlog (Video Post)</option><option value="podcast" ${data.post_type === 'podcast' ? 'selected' : ''}>Podcast (Audio Post)</option></select></div>
+        <div class="form-group" id="content-editor-group"><label for="content-editor">Blog Content</label><div id="content-editor" style="background: white;"></div></div>
+        <div class="form-group"><label for="video_url">Video/Audio URL</label><input type="url" id="video_url" value="${data.video_url || ''}"></div>
+        <div class="form-group"><label>Current Image</label><br><img src="${data.image_url}" alt="${data.title}" style="width:100px; height:100px; object-fit:cover; border-radius:4px; margin-bottom:10px;"></div>
         <div class="form-group"><label for="image">Upload New Image (optional)</label><input type="file" id="image" accept="image/*"></div>
         <button type="submit" class="btn btn-primary">Update Post</button>`;
 
     const quill = new Quill('#content-editor', { theme: 'snow', modules: { toolbar: fullToolbarOptions } });
     quill.root.innerHTML = data.content || '';
+
+    // Toggle logic for Edit Form
+    const typeSelect = document.getElementById('post_type');
+    const editorGroup = document.getElementById('content-editor-group');
+    const toggleEditor = () => {
+        if (typeSelect.value === 'blog') editorGroup.style.display = 'block';
+        else editorGroup.style.display = 'none';
+    };
+    typeSelect.addEventListener('change', toggleEditor);
+    toggleEditor();
 
     document.getElementById('post-edit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
